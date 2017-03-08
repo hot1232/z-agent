@@ -2,6 +2,12 @@
 # -*- coding:utf8 -*-
 __doc__='''
 姣忎釜checker閮藉簲鍖呭惈涓�釜Checker绫�姣忎釜Checker绫婚兘搴旀湁涓�釜interval绫诲彉閲�'''
+
+class CheckerException(Exception):
+    def __init__(self,msg):
+        super(CheckerException,self).__init__()
+        self.message=msg
+
 class CheckerBase(object): 
     interval=300
     def __new__(cls, *args, **kw):  
