@@ -75,6 +75,13 @@ def t1():
         except Empty:
             gevent.sleep(1)
 
+def t2():
+    global evt
+    for i in xrange(20000):
+        evt.put(i)
+        print("put: %d"%i)
+    return "over"
+
 def t3():
     global evt,b
     while True:
@@ -84,14 +91,7 @@ def t3():
             if data:
                 print("2 recv data: %s"%data)
         except Empty:
-            gevent.sleep(1)
-
-def t2():
-    global evt
-    for i in xrange(20000):
-        evt.put(i)
-        print("put: %d"%i)
-    return "over"
+            gevent.sleep(1）
 
 def cb(result):
     print(result)

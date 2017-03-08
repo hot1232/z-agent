@@ -15,6 +15,9 @@ from gevent.event import AsyncResult
 from gevent.lock import BoundedSemaphore
 from gevent.pool import Pool
 
+from gevent.baseserver import StreamServer
+
+
 def main(args):
     pass
 
@@ -75,6 +78,13 @@ def t1():
         except Empty:
             gevent.sleep(1)
 
+def t2():
+    global evt
+    for i in xrange(20000):
+        evt.put(i)
+        print("put: %d"%i)
+    return "over"
+
 def t3():
     global evt,b
     while True:
@@ -86,28 +96,23 @@ def t3():
         except Empty:
             gevent.sleep(1)
 
-def t2():
-    global evt
-    for i in xrange(20000):
-        evt.put(i)
-        print("put: %d"%i)
-    return "over"
-
 def cb(result):
     print(result)
 
+
+class Agent(object):
+    def __init__(self):
+        import os
+        if not os.path.exists("/var/lib/z-agent"):
+            os.mkdir("/var/lib/z-agent")
+    @classmethod
+    def main(cls,*args,**kwarg):
+        pool =ThreadPool(4)
+        #启动命令接口器
+        #启动
+        #pool.spawn(t1)
+        #pool.spawn(t3)
+        #pool.spawn(t2)
+
 if __name__ == "__main__":
-    import time
-    pool =ThreadPool(4)
-    #g1=pool.apply_async(t1,callback=cb)
-    #g2=pool.apply_async(t2,callback=cb)
-    #pool.spawn(g1)
-    #pool.spawn(t1)
-    #pool.spawn(t3)
-    #pool.spawn(t2)
-    p3=Pool(size=3)
-    p3.add(MainProcess().spawn())
-    p3.add(MainProcess().spawn())
-    p3.start(p3)
-    while True:
-        gevent.sleep(20)
+    Agent.main()
