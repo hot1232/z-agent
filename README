@@ -1,0 +1,4 @@
+pip install click
+yum -y install python-gevent-core python-daemon
+https://github.com/jbfavre/python-zabbix
+pip install -i https://testpypi.python.org/pypi protobix
