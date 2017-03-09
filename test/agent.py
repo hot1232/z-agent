@@ -14,9 +14,9 @@ from gevent.queue import Queue,Empty
 from gevent.event import AsyncResult
 from gevent.lock import BoundedSemaphore
 from gevent.pool import Pool
-
-from gevent.baseserver import StreamServer
-
+from gevent.server import StreamServer
+from multiprocessing import Process
+from socket import error as socket_error
 
 def main(args):
     pass
@@ -24,7 +24,7 @@ def main(args):
 def daemon(func,args=None):
     __doc__ = '''
     name: daemon
-    description: daemonize main process
+    description: daemonize main process，暂时没有用到这个函数
     input:
           None
     output:
@@ -40,7 +40,7 @@ def daemon(func,args=None):
         pid2=os.fork();
         if pid2 > 0:
             logger.info("daemon start with pid: {0}".format(pid2))
-            open("/var/run/compress_logfile.pid","w").write("%s"%pid2);
+            open("/var/run/z-agent.pid","w").write("%s"%pid2);
         elif pid2 == 0:
             for f in sys.stdout, sys.stderr: f.flush();
             si = file("/dev/null", 'r');
@@ -98,21 +98,51 @@ def t3():
 
 def cb(result):
     print(result)
-
-
-class Agent(object):
+    
+class CommandRunner(object):
     def __init__(self):
-        import os
-        if not os.path.exists("/var/lib/z-agent"):
-            os.mkdir("/var/lib/z-agent")
-    @classmethod
-    def main(cls,*args,**kwarg):
-        pool =ThreadPool(4)
-        #启动命令接口器
-        #启动
-        #pool.spawn(t1)
-        #pool.spawn(t3)
-        #pool.spawn(t2)
+        pass
+    def __call__(self,socket, address):
+        try:
+            socket.settimeout(30)
+            while not socket.closed:
+                #需要添加身份认证
+                data=socket.recv(1024)
+                socket.sendall('HTTP/1.1 200 OK\n\npid: %s count: %s  data: %s!!\n'%(os.getpid(),self.count,data))
+            socket.close()
+        except socket_error,e:
+            (errno,msg)=e
+            print("error %s: %s"%(errno,msg))
+            if not socket.closed:
+                socket.close()
+        
+    @staticmethod
+    def serve_forever():
+        __doc__ = '''
+        多进程时使用
+        '''
+        server.start()
+        server.start_accepting()
+        server._stop_event.wait()
+        
 
 if __name__ == "__main__":
-    Agent.main()
+    #start worker thread pool
+    pool =ThreadPool(4)
+    #c=pool.spawn(t2)
+    
+    #start command runner processes
+    #process_count = 4
+    #process_list=[]
+    #需要添加配置读取代码
+    server = StreamServer(('',10052), CommandRunner(), backlog=100000)
+    server.init_socket()
+    
+    server.start()
+    server.start_accepting()
+    server._stop_event.wait()
+    
+    #for i in range(process_count - 1):
+    #    p=Process(target=CommandRunner.serve_forever, args=tuple())
+    #    p.start()
+    #    process_list.append(p)

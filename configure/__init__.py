@@ -4,8 +4,7 @@
 from ConfigParser import ConfigParser
 
 
-class ConfigBase(object):
-    
-    def __iter__(self):
-        return iter([x.lstrip("facter_") for x in dir(self) if x.startswith("facter_")])
+class Config(object):
+    def __init__(self):
+        pass
 

@@ -28,6 +28,12 @@ class CheckerBase(object):
     def do_t1(self):
         return 0;
 
+class ZabbixSender(object):
+    def __init__(self):
+        pass
+    
+    def send(self):
+        pass
 #c=T1()
 #c.main()
 #if hasattr(c,"t1"):
