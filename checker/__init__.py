@@ -8,8 +8,7 @@ class CheckerException(Exception):
         super(CheckerException,self).__init__()
         self.message=msg
 
-class CheckerBase(object): 
-    interval=300
+class CheckerBase(object):
     def __new__(cls, *args, **kw):  
         if not hasattr(cls, '_instance'):  
             orig = super(CheckerBase, cls)  
@@ -17,7 +16,10 @@ class CheckerBase(object):
         return cls._instance
 
     def __init__(self,interval=None):
-        self.interval=interval
+        if interval:
+            self.interval=interval
+        else:
+            self.interval=60
 
     def __getattr__(self,key):
         return getattr(self,"do_%s"%key)()
@@ -34,9 +36,3 @@ class ZabbixSender(object):
     
     def send(self):
         pass
-#c=T1()
-#c.main()
-#if hasattr(c,"t1"):
-#    print(c.t1)
-#for i in c:
-#    print(i)

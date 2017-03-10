@@ -12,6 +12,33 @@ from gevent.threadpool import ThreadPool
 from gevent.pool import Pool
 from gevent.server import StreamServer
 from socket import error as socket_error
+from gevent.queue import Queue
+import imp
+import checker
+
+class CheckerCollect(object):
+    mod_list={}
+    def __init__(self):
+        pass
+    
+    def __iter__(self):
+        import os
+        #have a bug,deal with directory,not only file
+        curdir=os.path.dirname(os.path.realpath(__file__))
+        for cwd,subdirs,files in os.walk(os.path.join(curdir,"checker")):
+            import_prefix=cwd.lstrip(curdir).replace("/",".")
+            for mod in files:
+                if mod.endswith(".py") and mod != "__init__.py":
+                    mod_name="%s.%s"%(import_prefix,mod.rstrip(".py"))
+                    file, pathname, desc = imp.find_module(mod.rstrip(".py"),[os.path.join(curdir,cwd)])
+                    self.mod_list[mod.rstrip(".py")]=imp.load_module(mod_name,file,pathname,desc)
+            return iter(self.mod_list.keys())
+        return []
+    def __getitem__(self,key):
+        if key in self.mod_list:
+            return self.mod_list[key]
+        else:
+            self.__iter__()
     
 class CommandRunner(object):
     def __init__(self):
@@ -39,15 +66,53 @@ class CommandRunner(object):
         server.start_accepting()
         server._stop_event.wait()
         
+class ExecuteQueue(object):
+    def __new__(cls, *args, **kw):  
+        if not hasattr(cls, '_instance'):  
+            orig = super(ExecuteQueue, cls)  
+            cls._instance = orig.__new__(cls, *args, **kw)  
+        return cls._instance
+    def __init__(self):
+        self.queue_list={}
+    def add_queue(self,queuename):
+        #setattr(self, queuename, Queue())
+        if self.queue_list.has_key(queuename):
+            self.queue_list[queuename]=Queue()
+    
+    def __getitem__(self,key):
+        return self.queue_list.get(key,None)
+
+
+class CheckerRunner(gevent.Greenlet):
+    def __init__(self, interval,run=None):
+        super(CheckerRunner,self).__init__(run=run)
+        self.interval=interval
+    def _run(self):
+        pass;
+
+class ResultsSender(gevent.Greenlet):
+    def __init__(self, cls_sender,run=None):
+        super(ResultsSender,self).__init__(run=run)
+        self.cls_sender=cls_sender
+    def _run(self):
+        pass
+        
+        
 
 if __name__ == "__main__":
     #start worker thread pool
     pool =ThreadPool(4)
+    
+    cc=CheckerCollect()
+    for checker in cc:
+        print(cc[checker].Checker().interval)
+    
+    #启动后添加新的checker更新机制
 
     #需要添加配置读取代码
     server = StreamServer(('',10052), CommandRunner(), backlog=100000)
-    server.init_socket()
+    #server.init_socket()
     
-    server.start()
-    server.start_accepting()
-    server._stop_event.wait()
+    #server.start()
+    #server.start_accepting()
+    #server._stop_event.wait()
