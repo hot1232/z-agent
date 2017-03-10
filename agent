@@ -78,17 +78,34 @@ class ExecuteQueue(object):
         #setattr(self, queuename, Queue())
         if self.queue_list.has_key(queuename):
             self.queue_list[queuename]=Queue()
+        return True
     
     def __getitem__(self,key):
         return self.queue_list.get(key,None)
+    
+    def __contains__(self,key):
+        if key in self.queue_list.keys():
+            return True
+        else:
+            return False
 
 
 class CheckerRunner(gevent.Greenlet):
-    def __init__(self, interval,run=None):
+    def __init__(self, interval,checker_list=None,run=None):
         super(CheckerRunner,self).__init__(run=run)
         self.interval=interval
     def _run(self):
-        pass;
+        queue=ExecuteQueue()
+        if not queue.add_queue("checker_%s"%self.interval):
+            return
+        result_queue=queue["checker_%s"%self.interval]
+        while checker_list:
+            result={}
+            for checker in checker_list:
+                for item in checker:
+                    result.update({item:checker.item})
+            result_queue.put(result)
+            gevent.sleep(self.interval)
 
 class ResultsSender(gevent.Greenlet):
     def __init__(self, cls_sender,run=None):
@@ -101,12 +118,21 @@ class ResultsSender(gevent.Greenlet):
 
 if __name__ == "__main__":
     #start worker thread pool
-    pool =ThreadPool(4)
+    #这段代码需要再分析一下
+    pool =ThreadPool(8)
     
     cc=CheckerCollect()
+    checker_interval_dict={}
     for checker in cc:
-        print(cc[checker].Checker().interval)
-    
+        checker=cc[checker].Checker()
+        if checker_interval_dict.has_key(checker.interval):
+            checker_interval_dict[checker.interval].append(checker)
+        else:
+            checker_interval_dict[checker.intreval]=[checker]
+    for interval,checker_list in checker_interval_dict:
+        check=CheckerRunner(interval, checker_list)
+        check.start()
+        pool.spawn(check.join)
     #启动后添加新的checker更新机制
 
     #需要添加配置读取代码
