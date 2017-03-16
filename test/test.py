@@ -1,4 +1,5 @@
 import gevent
+from lib import singleton
 
 def t1():
     while True:
