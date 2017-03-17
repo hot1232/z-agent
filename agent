@@ -27,7 +27,7 @@ class CheckerCollect(object):
         self.mod_list={}
         curdir=os.path.dirname(os.path.realpath(__file__))
         for cwd,subdirs,files in os.walk(os.path.join(curdir,"checker")):
-            import_prefix=cwd.lstrip(curdir).replace("/",".")
+            import_prefix="checker"
             for mod in files:
                 if mod.endswith(".py") and mod != "__init__.py":
                     mod_name="%s.%s"%(import_prefix,mod.rstrip(".py"))
