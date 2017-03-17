@@ -4,18 +4,19 @@
 from gevent import monkey
 monkey.patch_all()
 
-#!/usr/bin/env python
-# -*- coding:utf8 -*-
-
 import gevent
 from gevent.threadpool import ThreadPool
 from gevent.pool import Pool
 from gevent.server import StreamServer
 from socket import error as socket_error
 import imp
-import checker
 import os
 import signal
+
+import checker
+import sender.zbx
+from lib.link import Chanels
+
 
 class CheckerCollect(object):
     def __new__(cls, *args, **kw):  
@@ -70,19 +71,37 @@ class CommandRunner(object):
         
 
 class ResultsSender(gevent.Greenlet):
-    def __init__(self, cls_sender,run=None):
-        super(ResultsSender,self).__init__(run=run)
-        self.cls_sender=cls_sender
-    def _run(self):
-        chan=Chanels()
+    def __init__(self,*args,**kwargs):
+        super(ResultsSender,self).__init__(*args,**kwargs)
+        
+    def _run(self,*args,**kwargs):
+        chan = Chanels()
         if not "checker_result_queue" in chan:
-            chan.append("checker_result_queue")        
+            chan.append("checker_result_queue")
+        self.cls_sender=self.kwargs.get("sender")
+        self.kwargs.pop("sender")
+        sender=self.cls_sender(*(),**self.kwargs)
+        chan=Chanels()
         while True:
-            if not chan["checker_result_queue"].empty():
-                data=chan["checker_result_queue"].get()
-                sender=self.cls_sender(data)
-                sender.send()
+            data={}
+            try:
+                count=0
+                while not chan["checker_result_queue"].empty():
+                    if count == 20:
+                        break
+                    data=chan["checker_result_queue"].get()
+                    data.update(data)
+                    count+=1
+                timeout=gevent.Timeout(3)
+                timeout.start()
+                if not data == {}:
+                    sender.send(data)
+                timeout.cancel()
+            except gevent.Timeout,e:
+                print("%s"%e)
+                continue
             gevent.sleep(60)
+                
 
 class Agent(object):
     def __init__(self,**kwarg):
@@ -108,9 +127,9 @@ class Agent(object):
     def run_facter(self):
         pass
     
-    def run_sender(self):
-        self.sender=ResultsSender(cls_sender=None)
-        self.sender.spawn()
+    def run_zbxtrapsender(self):
+        self.sender=ResultsSender()
+        self.sender.spawn(sender=sender.zbx.Sender,mType="items")
     
     def run_cmdserver(self):
         #需要添加配置读取代码
@@ -126,15 +145,15 @@ class Agent(object):
     
     def gevent_shutdown(self,checker_list,server,sender):
         gevent.killall(self.checker_list)
-        self.server.stop()
-        self.sender.stop()
+        server.stop()
+        sender.stop()
     
     @classmethod
     def main(self):
         agent=Agent()
         agent.run_checker()
-        #self.run_sender()
-        #self.run_facter()
+        agent.run_zbxtrapsender()
+        #seagentlf.run_facter()
         agent.run_cmdserver()
     
     

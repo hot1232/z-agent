@@ -51,19 +51,21 @@ class CheckerBase(gevent.Greenlet):
         return iter([x.replace("do_check_","") for x in dir(self) if x.startswith("do_check_")])
     
     def _run(self):
+        chan=Chanels()
+        print(id(chan))
         result={}
         while True:
             t1 = time.time()
             try:
+                self.timeout.cancel()
                 self.timeout.start()
                 for ck in self:
                     result.update({ck:getattr(self,"do_check_%s"%ck)()})
                 self.timeout.cancel()
-                chan=Chanels()
                 if not "checker_result_queue" in chan:
                     chan.append("checker_result_queue")
+                print("write data: %s"%result)
                 chan["checker_result_queue"].put(result)
-                print(result)
             except SystemExit,e:
                 raise e
             except AttributeError,e:
