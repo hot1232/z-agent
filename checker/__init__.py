@@ -3,7 +3,6 @@
 
 import gevent
 import time
-from gevent import timeout
 import traceback
 
 import os
@@ -11,9 +10,7 @@ libpath=os.path.dirname(__file__).rstrip(__name__)
 if not libpath in os.sys.path:
     os.sys.path.append(libpath)
 
-
-__doc__='''
-姣忎釜checker閮藉簲鍖呭惈涓�釜Checker绫�姣忎釜Checker绫婚兘搴旀湁涓�釜interval绫诲彉閲�'''
+from lib.link import Chanels
 
 class CheckerException(Exception):
     def __init__(self,msg):
@@ -62,6 +59,10 @@ class CheckerBase(gevent.Greenlet):
                 for ck in self:
                     result.update({ck:getattr(self,"do_check_%s"%ck)()})
                 self.timeout.cancel()
+                chan=Chanels()
+                if not "checker_result_queue" in chan:
+                    chan.append("checker_result_queue")
+                chan["checker_result_queue"].put(result)
                 print(result)
             except SystemExit,e:
                 raise e
