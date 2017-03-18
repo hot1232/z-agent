@@ -27,14 +27,10 @@ class CheckerBase(gevent.Greenlet):
             cls._instance={}
             orig = super(CheckerBase, cls)
             cls._instance[key]=orig.__new__(cls, *args, **kw)
-            return cls._instance[key]
-        else:
-            if cls._instance.has_key(key):
-                return cls._instance[key]
-            else:
-                orig = super(CheckerBase, cls)
-                cls._instance[key]=orig.__new__(cls, *args, **kw)
-                return cls._instance[key]
+        elif not cls._instance.has_key(key):
+            orig = super(CheckerBase, cls)
+            cls._instance[key]=orig.__new__(cls, *args, **kw)
+        return cls._instance[key]
             
     def __init__(self,interval=None,run=None,timeout=None,_name=None,*args, **kwargs):
         super(CheckerBase,self).__init__(run=run,*args,**kwargs)

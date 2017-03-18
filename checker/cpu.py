@@ -4,11 +4,8 @@
 __author__='haibo.zhang'
 
 from . import CheckerBase
-import pickle
 import time
 import os
-import json
-from optparse import OptionParser 
 
 class Checker(CheckerBase):
     def __init__(self,filepath="/proc/stat"):

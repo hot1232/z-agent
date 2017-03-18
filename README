@@ -1,8 +1,13 @@
 pip install click
-sdadasda
 yum -y install python-gevent-core
 https://github.com/jbfavre/python-zabbix
 pip install -i https://testpypi.python.org/pypi protobix
 pip install ConcurrentLogHandler
-xxxxxxaaa
-ddddd
+
+1、需要放在配置里的内容：
+    zbx发送超时时间
+    zbx server的ip和端口
+    各个chcker的检查间隔（如果有）
+    日志的配置
+2、cmd server需要支持zbx server向agent请求system.uname
+3、自定义的cmd server的通讯协议
