@@ -18,17 +18,17 @@ import sender.zbx
 from lib.link import Chanels
 
 
-class CheckerCollect(object):
+class Collector(object):
     def __new__(cls, *args, **kw):  
         if not hasattr(cls, '_instance'):  
             orig = super(CheckerCollect, cls)  
             cls._instance = orig.__new__(cls, *args, **kw)  
         return cls._instance    
-    def __init__(self):
+    def __init__(self,collecttype="chcker"):
         self.mod_list={}
         curdir=os.path.dirname(os.path.realpath(__file__))
-        for cwd,subdirs,files in os.walk(os.path.join(curdir,"checker")):
-            import_prefix="checker"
+        for cwd,subdirs,files in os.walk(os.path.join(curdir,collecttype)):
+            import_prefix=collecttype
             for mod in files:
                 if mod.endswith(".py") and mod != "__init__.py":
                     mod_name="%s.%s"%(import_prefix,mod.rstrip(".py"))
@@ -115,7 +115,7 @@ class Agent(object):
         #start worker thread pool
         #这段代码需要再分析一下
         
-        cc=CheckerCollect()
+        cc=Collector()
         
         for checker in cc:
             ck=cc[checker].Checker()
@@ -125,6 +125,10 @@ class Agent(object):
             self.checker_list.append(ck)        
     
     def run_facter(self):
+        cc=Collector(collecttype="facter")
+        for facter in cc:
+            fact=cc[facter].Facter()
+            #not complete!
         pass
     
     def run_zbxtrapsender(self):
