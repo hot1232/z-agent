@@ -7,10 +7,11 @@ class Chanels(object):
     def __new__(cls, *args, **kw):  
         if not hasattr(cls, '_instance'):  
             orig = super(Chanels, cls)  
-            cls._instance = orig.__new__(cls, *args, **kw)  
+            cls._instance = orig.__new__(cls, *args, **kw)
+            cls._instance._queue_list={}
         return cls._instance
     def __init__(self):
-        self._queue_list={}
+        pass
     def append(self,queuename):
         #setattr(self, queuename, Queue())
         if not self._queue_list.has_key(queuename):

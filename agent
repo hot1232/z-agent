@@ -4,30 +4,31 @@
 from gevent import monkey
 monkey.patch_all()
 
-#!/usr/bin/env python
-# -*- coding:utf8 -*-
-
 import gevent
 from gevent.threadpool import ThreadPool
 from gevent.pool import Pool
 from gevent.server import StreamServer
 from socket import error as socket_error
 import imp
-import checker
 import os
 import signal
 
-class CheckerCollect(object):
+import checker
+import sender.zbx
+from lib.link import Chanels
+
+
+class Collector(object):
     def __new__(cls, *args, **kw):  
         if not hasattr(cls, '_instance'):  
-            orig = super(CheckerCollect, cls)  
+            orig = super(Collector, cls)  
             cls._instance = orig.__new__(cls, *args, **kw)  
         return cls._instance    
-    def __init__(self):
+    def __init__(self,collecttype="checker"):
         self.mod_list={}
         curdir=os.path.dirname(os.path.realpath(__file__))
-        for cwd,subdirs,files in os.walk(os.path.join(curdir,"checker")):
-            import_prefix="checker"
+        for cwd,subdirs,files in os.walk(os.path.join(curdir,collecttype)):
+            import_prefix=collecttype
             for mod in files:
                 if mod.endswith(".py") and mod != "__init__.py":
                     mod_name="%s.%s"%(import_prefix,mod.rstrip(".py"))
@@ -51,7 +52,15 @@ class CommandRunner(object):
             while not socket.closed:
                 #需要添加身份认证
                 data=socket.recv(1024)
-                socket.sendall('HTTP/1.1 200 OK\n\npid: %s count: %s  data: %s!!\n'%(os.getpid(),self.count,data))
+                if len(data)==0:
+                    continue
+                import sender.discovery
+                print("recv data:%s"%data)
+                send=sender.discovery.Sender(socket=socket,data="hello")
+                send.send()
+                socket.close()
+                #socket.sendall("test")
+                #socket.sendall('HTTP/1.1 200 OK\n\npid: %s  data: %s!!\n'%(os.getpid(),data))
             socket.close()
         except socket_error,e:
             (errno,msg)=e
@@ -70,19 +79,36 @@ class CommandRunner(object):
         
 
 class ResultsSender(gevent.Greenlet):
-    def __init__(self, cls_sender,run=None):
-        super(ResultsSender,self).__init__(run=run)
-        self.cls_sender=cls_sender
-    def _run(self):
-        chan=Chanels()
+    def __init__(self,*args,**kwargs):
+        super(ResultsSender,self).__init__(*args,**kwargs)
+        
+    def _run(self,*args,**kwargs):
+        chan = Chanels()
         if not "checker_result_queue" in chan:
-            chan.append("checker_result_queue")        
+            chan.append("checker_result_queue")
+        self.cls_sender=self.kwargs.get("sender")
+        self.kwargs.pop("sender")
+        sender=self.cls_sender(*(),**self.kwargs)
+        chan=Chanels()
         while True:
-            if not chan["checker_result_queue"].empty():
-                data=chan["checker_result_queue"].get()
-                sender=self.cls_sender(data)
-                sender.send()
+            data={}
+            try:
+                count=0
+                while not chan["checker_result_queue"].empty():
+                    if count == 20:
+                        break
+                    data.update(chan["checker_result_queue"].get())
+                    count+=1
+                timeout=gevent.Timeout(3)
+                timeout.start()
+                if not data == {}:
+                    sender.send(data)
+                timeout.cancel()
+            except gevent.Timeout,e:
+                print("%s"%e)
+                continue
             gevent.sleep(60)
+                
 
 class Agent(object):
     def __init__(self,**kwarg):
@@ -96,7 +122,7 @@ class Agent(object):
         #start worker thread pool
         #这段代码需要再分析一下
         
-        cc=CheckerCollect()
+        cc=Collector()
         
         for checker in cc:
             ck=cc[checker].Checker()
@@ -106,15 +132,19 @@ class Agent(object):
             self.checker_list.append(ck)        
     
     def run_facter(self):
+        cc=Collector(collecttype="facter")
+        for facter in cc:
+            fact=cc[facter].Facter()
+            #not complete!
         pass
     
-    def run_sender(self):
-        self.sender=ResultsSender(cls_sender=None)
-        self.sender.spawn()
+    def run_zbxtrapsender(self):
+        self.sender=ResultsSender()
+        self.sender.spawn(sender=sender.zbx.Sender,mType="items")
     
     def run_cmdserver(self):
         #需要添加配置读取代码
-        self.server = StreamServer(('',10052), CommandRunner(), backlog=100000)
+        self.server = StreamServer(('',10050), CommandRunner(), backlog=100000)
         self.server.init_socket()
         
         gevent.signal(signal.SIGQUIT, self.gevent_shutdown,self.checker_list,self.server,self.sender)
@@ -126,15 +156,15 @@ class Agent(object):
     
     def gevent_shutdown(self,checker_list,server,sender):
         gevent.killall(self.checker_list)
-        self.server.stop()
-        self.sender.stop()
+        server.stop()
+        gevent.killall([sender])
     
     @classmethod
     def main(self):
         agent=Agent()
         agent.run_checker()
-        #self.run_sender()
-        #self.run_facter()
+        agent.run_zbxtrapsender()
+        #seagentlf.run_facter()
         agent.run_cmdserver()
     
     

@@ -4,11 +4,8 @@
 __author__='haibo.zhang'
 
 from . import CheckerBase
-import pickle
 import time
 import os
-import json
-from optparse import OptionParser 
 
 class Checker(CheckerBase):
     def __init__(self,filepath="/proc/stat"):
@@ -16,6 +13,7 @@ class Checker(CheckerBase):
         self.stat_path=filepath
         self.cpucount=0
         self._old_data={}
+        self.interval=10
     def _get_raw_data(self):
         kvps={}
         fh=open(self.stat_path,"r")
@@ -61,6 +59,26 @@ class Checker(CheckerBase):
             return int((long(idle) - long(o_idle))/100)
         else:
             self._update_old_data("idle", idle)
+            return 0
+    def do_check_systime(self):
+        current_raw_data = self._get_raw_data()
+        systime = current_raw_data["cpu"][2]
+        if "systime" in self._old_data.keys():
+            o_systime = self._old_data["systime"]
+            self._update_old_data("systime", systime)
+            return int((long(systime) - long(o_systime))/100)
+        else:
+            self._update_old_data("systime", systime)
+            return 0
+    def do_check_usertime(self):
+        current_raw_data = self._get_raw_data()
+        usertime = current_raw_data["cpu"][0]
+        if "usertime" in self._old_data.keys():
+            o_usertime = self._old_data["usertime"]
+            self._update_old_data("usertime", usertime)
+            return int((long(usertime) - long(o_usertime))/100)
+        else:
+            self._update_old_data("usertime", usertime)
             return 0
     
     def do_check_iowait(self):

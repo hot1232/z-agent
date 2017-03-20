@@ -6,10 +6,14 @@ if not libpath in os.sys.path:
     os.sys.path.append(libpath)
 
 class FacterBase(object):
-    def __init__(self):
-        pass
+    def __new__(cls, *args, **kw):       
+        if not hasattr(cls, '_instance'):
+            cls._instance={}
+            orig = super(FacterBase, cls)
+            cls._instance=orig.__new__(cls, *args, **kw)
+        return cls._instance
 
-    def __getattr__(self,key):
+    def __getitem__(self,key):
         return getattr(self,"facter_%s"%key)()
     
     def __iter__(self):
