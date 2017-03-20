@@ -106,7 +106,7 @@ class ResultsSender(gevent.Greenlet):
                 timeout.cancel()
                 gevent.sleep(60)
             except gevent.Timeout,e:
-                print("%s"%e)
+                print("timeout: %s"%e)
                 continue            
                 
 

@@ -16,7 +16,7 @@ import argparse
 
 class Checker(CheckerBase):
     def __init__(self,filepath="/proc/meminfo"):
-        super(CheckerBase.self).__init__()
+        super(Checker,self).__init__()
         self.mem_path=filepath
         self.old_data={}
         self.interval=180
