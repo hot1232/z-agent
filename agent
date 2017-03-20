@@ -21,10 +21,10 @@ from lib.link import Chanels
 class Collector(object):
     def __new__(cls, *args, **kw):  
         if not hasattr(cls, '_instance'):  
-            orig = super(CheckerCollect, cls)  
+            orig = super(Collector, cls)  
             cls._instance = orig.__new__(cls, *args, **kw)  
         return cls._instance    
-    def __init__(self,collecttype="chcker"):
+    def __init__(self,collecttype="checker"):
         self.mod_list={}
         curdir=os.path.dirname(os.path.realpath(__file__))
         for cwd,subdirs,files in os.walk(os.path.join(curdir,collecttype)):
