@@ -48,7 +48,6 @@ class CheckerBase(gevent.Greenlet):
     
     def _run(self):
         chan=Chanels()
-        print(id(chan))
         result={}
         while True:
             t1 = time.time()

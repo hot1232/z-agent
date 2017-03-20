@@ -13,6 +13,7 @@ class Checker(CheckerBase):
         self.stat_path=filepath
         self.cpucount=0
         self._old_data={}
+        self.interval=10
     def _get_raw_data(self):
         kvps={}
         fh=open(self.stat_path,"r")

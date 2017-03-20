@@ -52,7 +52,15 @@ class CommandRunner(object):
             while not socket.closed:
                 #需要添加身份认证
                 data=socket.recv(1024)
-                socket.sendall('HTTP/1.1 200 OK\n\npid: %s count: %s  data: %s!!\n'%(os.getpid(),self.count,data))
+                if len(data)==0:
+                    continue
+                import sender.discovery
+                print("recv data:%s"%data)
+                send=sender.discovery.Sender(socket=socket,data="hello")
+                send.send()
+                socket.close()
+                #socket.sendall("test")
+                #socket.sendall('HTTP/1.1 200 OK\n\npid: %s  data: %s!!\n'%(os.getpid(),data))
             socket.close()
         except socket_error,e:
             (errno,msg)=e
@@ -89,8 +97,7 @@ class ResultsSender(gevent.Greenlet):
                 while not chan["checker_result_queue"].empty():
                     if count == 20:
                         break
-                    data=chan["checker_result_queue"].get()
-                    data.update(data)
+                    data.update(chan["checker_result_queue"].get())
                     count+=1
                 timeout=gevent.Timeout(3)
                 timeout.start()
@@ -137,7 +144,7 @@ class Agent(object):
     
     def run_cmdserver(self):
         #需要添加配置读取代码
-        self.server = StreamServer(('',10052), CommandRunner(), backlog=100000)
+        self.server = StreamServer(('',10050), CommandRunner(), backlog=100000)
         self.server.init_socket()
         
         gevent.signal(signal.SIGQUIT, self.gevent_shutdown,self.checker_list,self.server,self.sender)

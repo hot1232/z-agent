@@ -11,3 +11,4 @@ pip install ConcurrentLogHandler
     日志的配置
 2、cmd server需要支持zbx server向agent请求system.uname
 3、自定义的cmd server的通讯协议
+4、protobix时间处理，加入时间控制

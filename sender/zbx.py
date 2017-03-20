@@ -14,6 +14,7 @@ class Sender(object):
     
     def send(self,data):
         try:
+            print("zbx send data: %s"%data)
             data={self.hostname:data}
             self.data.add(data)
             ret = self.data.send(self.data)
