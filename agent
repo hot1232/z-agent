@@ -97,17 +97,17 @@ class ResultsSender(gevent.Greenlet):
                 while not chan["checker_result_queue"].empty():
                     if count == 20:
                         break
-                    data.update(chan["checker_result_queue"].get())
+                    sender.add(chan["checker_result_queue"].get())
                     count+=1
                 timeout=gevent.Timeout(3)
                 timeout.start()
-                if not data == {}:
-                    sender.send(data)
+                if sender.data.items_list:
+                    sender.send()
                 timeout.cancel()
+                gevent.sleep(60)
             except gevent.Timeout,e:
                 print("%s"%e)
-                continue
-            gevent.sleep(60)
+                continue            
                 
 
 class Agent(object):
