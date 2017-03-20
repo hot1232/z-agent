@@ -14,7 +14,7 @@ import argparse
 
 
 
-class Mem(CheckerBase):
+class Checker(CheckerBase):
     def __init__(self,filepath="/proc/meminfo"):
         super(CheckerBase.self).__init__()
         self.mem_path=filepath
@@ -75,3 +75,4 @@ class Mem(CheckerBase):
         self._do_check_common('VmallocUsed')
 
 if __name__ == "__main__":
+    pass
