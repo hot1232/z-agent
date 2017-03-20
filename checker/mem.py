@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding:utf8 -*-
+#__author__='kai.xu'
 
 from . import CheckerBase
 import os
@@ -10,6 +11,8 @@ import re
 import sys
 import json
 import argparse
+
+
 
 class Mem(CheckerBase):
     def __init__(self,filepath="/proc/meminfo"):
