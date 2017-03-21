@@ -5,12 +5,9 @@
 from . import CheckerBase
 import os
 import time
-import pickle
-import click
 import re
 import sys
 import json
-import argparse
 
 
 
