@@ -8,8 +8,7 @@ import time
 import os
 
 class Checker(CheckerBase):
-    def __init__(self,filepath="/proc/stat"):
-        super(Checker,self).__init__()
+    def _init(self,filepath="/proc/stat"):
         self.stat_path=filepath
         self.cpucount=0
         self._old_data={}

@@ -10,6 +10,8 @@ libpath=os.path.dirname(__file__).rstrip(__name__)
 if not libpath in os.sys.path:
     os.sys.path.append(libpath)
 
+from abc import abstractmethod
+
 from lib.link import Chanels
 
 class CheckerException(Exception):
@@ -42,6 +44,10 @@ class CheckerBase(gevent.Greenlet):
             self.timeout=gevent.Timeout(timeout)
         else:
             self.timeout=gevent.Timeout(3)
+        self._init(*args,**kwargs)
+    @abstractmethod
+    def _init(self,*args,**kwargs):
+        pass
     
     def __iter__(self):
         return iter([x.replace("do_check_","") for x in dir(self) if x.startswith("do_check_")])
