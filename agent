@@ -115,7 +115,7 @@ class ZbxAgent(object):
     def accept_system_uname(self):
         pass
     
-    def acce_system_hostname(self):
+    def accept_system_hostname(self):
         pass
     
                 
