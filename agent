@@ -156,10 +156,8 @@ class Agent(object):
         #需要添加配置读取代码
         self.server = StreamServer(('',10050), CommandRunner(), backlog=100000)
         self.server.init_socket()
-        
         gevent.signal(signal.SIGQUIT, self.gevent_shutdown,self.checker_list,self.server,self.sender)
-        gevent.signal(signal.SIGINT,self.gevent_shutdown,self.checker_list,self.server,self.sender)    
-        
+        gevent.signal(signal.SIGINT,self.gevent_shutdown,self.checker_list,self.server,self.sender)          
         self.server.start()
         self.server.start_accepting()
         self.server._stop_event.wait()
@@ -170,11 +168,11 @@ class Agent(object):
         gevent.killall([sender])
     
     @classmethod
-    def main(self):
-        agent=Agent()
+    def main(cls):
+        agent=cls()
         agent.run_checker()
         agent.run_zbxtrapsender()
-        #seagentlf.run_facter()
+        #agent.run_facter()
         agent.run_cmdserver()
     
     
