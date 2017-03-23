@@ -60,6 +60,7 @@ class Checker(CheckerBase):
         else:
             self._update_old_data("idle", idle)
             return 0
+
     def do_check_systime(self):
         current_raw_data = self._get_raw_data()
         systime = current_raw_data["cpu"][2]
@@ -70,6 +71,7 @@ class Checker(CheckerBase):
         else:
             self._update_old_data("systime", systime)
             return 0
+
     def do_check_usertime(self):
         current_raw_data = self._get_raw_data()
         usertime = current_raw_data["cpu"][0]
@@ -90,6 +92,17 @@ class Checker(CheckerBase):
             return int((long(iowait) - long(o_iowait))/100)
         else:
             self._update_old_data("iowait", iowait)
+            return 0
+
+    def do_check_ctxt(self):
+        current_raw_data = self._get_raw_data()
+        ctxt = current_raw_data["ctxt"]
+        if "ctxt" in self._old_data.keys():
+            o_ctxt = self._old_data["ctxt"]
+            self._old_data["ctxt"] = ctxt
+            return int(long(ctxt) - long(o_ctxt))
+        else:
+            self._update_old_data("ctxt", ctxt)
             return 0
 
     def do_check_hard_interrupt(self):
