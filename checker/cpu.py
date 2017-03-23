@@ -13,24 +13,25 @@ class Checker(CheckerBase):
         self.cpucount=0
         self._old_data={}
         self.interval=10
+        self.fh=open(self.stat_path,"r")
     def _get_raw_data(self):
         kvps={}
-        fh=open(self.stat_path,"r")
-        keylines=fh.readlines()
-        fh.close()
+        self.fh.seek(0)
+        keylines=self.fh.readlines()
         for line in keylines:
             kv_list=line.split()
             kvps.update({kv_list[0]:kv_list[1:]})
+        self.fh.seek(0)
         return kvps
     def _get_cpucount(self):
         kvps={}
-        fh=open(self.stat_path,"r")
-        keylines=fh.readlines()
-        fh.close()
+        self.fh.seek(0)
+        keylines=self.fh.readlines()
         for line in keylines:
             kv_list=line.split()
             if kv_list[0][0:3] == "cpu":
                 self.cpucount+=1
+        self.fh.seek(0)
         return self.cpucount-1
 
     def _update_old_data(self,key,value):
