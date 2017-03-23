@@ -10,7 +10,7 @@ class Sender(object):
     def __init__(self,mType="items"):
         self._name="zbx"
         self.data=protobix.DataContainer(mType, "172.16.5.38", 10051)
-        self.hostname="t1"
+        self.hostname="t2"
     def add(self,data):
         self.data.add({self.hostname:data})
     def send(self):
