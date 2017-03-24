@@ -6,6 +6,7 @@ __author__='haibo.zhang'
 from . import CheckerBase
 import time
 import os
+import copy
 
 class Checker(CheckerBase):
     def _init(self,filepath="/proc/stat"):
@@ -13,16 +14,24 @@ class Checker(CheckerBase):
         self.cpucount=0
         self._old_data={}
         self.interval=10
-        self.fh=open(self.stat_path,"r")
+        self._checktime=0
+        self._cur_raw_data={}
     def _get_raw_data(self):
         kvps={}
-        self.fh.seek(0)
-        keylines=self.fh.readlines()
-        for line in keylines:
-            kv_list=line.split()
-            kvps.update({kv_list[0]:kv_list[1:]})
-        self.fh.seek(0)
-        return kvps
+        if int(time.time()) - self._checktime > self.interval:
+            with open(self.stat_path,"r") as fh:
+                for line in fh:
+                    kv_list=line.split()
+                    kvps.update({kv_list[0]:[long(v) for v in kv_list[1:]]})
+            if not self._cur_raw_data:
+                self._old_data=copy.deepcopy(kvps)
+                for k in self._old_data:
+                    self._old_data[k]=[0 for i in self._old_data[k]]                
+            else:
+                self._old_data=copy.deepcopy(self._cur_raw_data)
+            self._cur_raw_data=copy.deepcopy(kvps)
+            self._checktime=int(time.time())
+        return self._cur_raw_data
     def _get_cpucount(self):
         kvps={}
         self.fh.seek(0)
@@ -33,122 +42,76 @@ class Checker(CheckerBase):
                 self.cpucount+=1
         self.fh.seek(0)
         return self.cpucount-1
-
-    def _update_old_data(self,key,value):
-        self._old_data.update({key:value})
             
-    def do_check_cputime(self):
-        current_raw_data = self._get_raw_data()
-        cputime = 0
-        for i in current_raw_data["cpu"]:
-            cputime +=long(i)
-        if "cputime" in self._old_data.keys():
-            o_cputime = self._old_data["cputime"]
-            self._update_old_data("cputime", cputime)
-            return int((long(cputime) - long(o_cputime))/100)
-        else:
-            self._update_old_data("cputime", cputime)
-            return 0
+#    def _get_cputime(self):
+#        current_raw_data = self._get_raw_data()
+#        cputime = sum(long(i) for i in current_raw_data["cpu"])
+#        value=0
+#        if "cputime" in self._old_data.keys():
+#            o_cputime = self._old_data["cputime"]
+#            value=int(cputime - o_cputime)
+#        self._update_old_data("cputime", cputime)
+#        return value
     
     def do_check_idle(self):
-        current_raw_data = self._get_raw_data()
-        idle = current_raw_data["cpu"][3]
-        if "idle" in self._old_data.keys():
-            o_idle = self._old_data["idle"]
-            self._update_old_data("idle", idle)
-            return int((long(idle) - long(o_idle))/100)
-        else:
-            self._update_old_data("idle", idle)
-            return 0
+        self._get_raw_data()
+        idle = self._cur_raw_data["cpu"][3]
+        o_idle=self._old_data["cpu"][3]
+        o_cputime = sum(long(i)for i in self._old_data["cpu"])
+        cputime=sum(long(i)for i in self._cur_raw_data["cpu"])
+        return "%.2f"%((idle-o_idle)/float(cputime-o_cputime)*100)
 
     def do_check_systime(self):
-        current_raw_data = self._get_raw_data()
-        systime = current_raw_data["cpu"][2]
-        if "systime" in self._old_data.keys():
-            o_systime = self._old_data["systime"]
-            self._update_old_data("systime", systime)
-            return int((long(systime) - long(o_systime))/100)
-        else:
-            self._update_old_data("systime", systime)
-            return 0
+        self._get_raw_data()
+        cputime =sum([long(v) for v in self._cur_raw_data["cpu"]])
+        o_cputime =sum([long(v) for v in self._old_data["cpu"]])         
+        systime = self._cur_raw_data["cpu"][2]
+        o_systime = self._old_data["cpu"][2]
+        return "%.2f"%((systime - o_systime)/(cputime - o_cputime)*100)
 
     def do_check_usertime(self):
-        current_raw_data = self._get_raw_data()
-        usertime = current_raw_data["cpu"][0]
-        if "usertime" in self._old_data.keys():
-            o_usertime = self._old_data["usertime"]
-            self._update_old_data("usertime", usertime)
-            return int((long(usertime) - long(o_usertime))/100)
-        else:
-            self._update_old_data("usertime", usertime)
-            return 0
+        self._get_raw_data()
+        cputime =sum([long(v) for v in self._cur_raw_data["cpu"]])
+        o_cputime =sum([long(v) for v in self._old_data["cpu"]])         
+        usertime = self._cur_raw_data["cpu"][0]
+        o_usertime = self._old_data["cpu"][0]
+        return "%.2f"%((usertime-o_usertime)/float(cputime-o_cputime)*100)
     
     def do_check_iowait(self):
-        current_raw_data = self._get_raw_data()
-        iowait = current_raw_data["cpu"][4]
-        if "iowait" in self._old_data.keys():
-            o_iowait = self._old_data["iowait"]
-            self._old_data["iowait"] = iowait
-            return int((long(iowait) - long(o_iowait))/100)
-        else:
-            self._update_old_data("iowait", iowait)
-            return 0
+        self._get_raw_data()
+        cputime =sum([long(v) for v in self._cur_raw_data["cpu"]])
+        o_cputime =sum([long(v) for v in self._old_data["cpu"]])        
+        iowait = self._cur_raw_data["cpu"][4]
+        o_iowait=self._old_data["cpu"][4]
+        return "%.2f"%((iowait-o_iowait)/float(cputime-o_cputime)*100)
 
     def do_check_ctxt(self):
-        current_raw_data = self._get_raw_data()
-        ctxt = current_raw_data["ctxt"]
-        if "ctxt" in self._old_data.keys():
-            o_ctxt = self._old_data["ctxt"]
-            self._old_data["ctxt"] = ctxt
-            return int(long(ctxt) - long(o_ctxt))
-        else:
-            self._update_old_data("ctxt", ctxt)
-            return 0
+        self._get_raw_data()
+        ctxt = self._cur_raw_data["ctxt"][0]
+        o_ctxt=self._old_data["ctxt"][0]
+        return int(ctxt-o_ctxt)
 
     def do_check_hard_interrupt(self):
-        current_raw_data = self._get_raw_data()
-        irq = current_raw_data["cpu"][5]
-        if "irq" in self._old_data.keys():
-            o_irq = self._old_data["irq"]
-            self._update_old_data("irq", irq)
-            return int((long(irq) - long(o_irq))/100)
-        else:
-            self._update_old_data("irq", irq)
-            return 0
+        self._get_raw_data()
+        irq = self._cur_raw_data["cpu"][5]
+        o_irq = self._old_data["cpu"][5]
+        return int(irq-o_irq)
 
     def do_check_soft_interrupt(self):
-        current_raw_data = self._get_raw_data()
-        softirq = current_raw_data["cpu"][6]
-        if "softirq" in self._old_data.keys():
-            o_softirq = self._old_data["softirq"]
-            self._update_old_data("softirq", softirq)    
-            return int((long(softirq) - long(o_softirq))/100)
-        else:
-            self._update_old_data("softirq", softirq)
-            return 0
+        self._get_raw_data()
+        softirq = self._cur_raw_data["cpu"][6]
+        o_softirq = self._old_data["cpu"][6]
+        return int(softirq-o_softirq)
 
     def do_check_cpu_usage(self):
-        current_raw_data = self._get_raw_data()
-        cputime = 0
-        for time in current_raw_data["cpu"]:
-            cputime += long(time)
-        idle = current_raw_data["cpu"][3]
-        if "cputime_idle" in self._old_data.keys():
-            o_cputime = self._old_data["cputime_idle"]["cputime"]
-            o_idle = self._old_data["cputime_idle"]["idle"]
-            cputime_idle={};
-            cputime_idle.update({"cputime":cputime})
-            cputime_idle.update({"idle":idle})
-            self._update_old_data("cputime_idle", cputime_idle)
-            value = ((((long(cputime) - long(idle))) - (long(o_cputime) - long(o_idle)))/float(long(cputime) - long(o_cputime)))*100
-            value = str("%.2f"%value)
-            return value
-        else:
-            cputime_idle={}
-            cputime_idle.update({"cputime":cputime})
-            cputime_idle.update({"idle":idle})
-            self._update_old_data("cputime_idle", cputime_idle)
-            return 0
+        self._get_raw_data()
+        cputime =sum([long(v) for v in self._cur_raw_data["cpu"]])
+        o_cputime =sum([long(v) for v in self._old_data["cpu"]])
+        idle = self._cur_raw_data["cpu"][3]
+        o_idle = self._old_data["cpu"][3]
+        cputime=cputime-o_cputime
+        usage=cputime-idle+o_idle
+        return "%.2f"%(usage/float(cputime)*100)
 
 if __name__ == "__main__":
     parser = OptionParser()
