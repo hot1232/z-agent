@@ -9,16 +9,19 @@ import os
 import copy
 
 class Checker(CheckerBase):
-    def _init(self,filepath="/proc/stat"):
-        self.stat_path=filepath
+    def _init(self,stat="/proc/stat",load="/proc/loadavg"):
+        self.stat_path=stat
+        self.load_path=load
         self.cpucount=0
         self._old_data={}
         self.interval=10
-        self._checktime=0
+        self._checkcputime=0
+        self._checkloadtime=0
         self._cur_raw_data={}
+        self._cur_load_data=[]
     def _get_raw_data(self):
         kvps={}
-        if int(time.time()) - self._checktime > self.interval:
+        if int(time.time()) - self._checkcputime >= self.interval:
             with open(self.stat_path,"r") as fh:
                 for line in fh:
                     kv_list=line.split()
@@ -30,8 +33,14 @@ class Checker(CheckerBase):
             else:
                 self._old_data=copy.deepcopy(self._cur_raw_data)
             self._cur_raw_data=copy.deepcopy(kvps)
-            self._checktime=int(time.time())
+            self._checkcputime=int(time.time())
         return self._cur_raw_data
+    def _get_loadavg(self):
+        if int(time.time()) - self._checkloadtime >= self.interval:
+            with open(self.load_path, "r") as load_handle:
+                self._cur_load_data = [la for la in load_handle.readline().split()[0:3]]
+            self._checkloadtime=int(time.time())
+
     def _get_cpucount(self):
         kvps={}
         self.fh.seek(0)
@@ -52,7 +61,16 @@ class Checker(CheckerBase):
 #            value=int(cputime - o_cputime)
 #        self._update_old_data("cputime", cputime)
 #        return value
-    
+    def do_check_loadavg_1(self):
+        self._get_loadavg()
+        return self._cur_load_data[0]
+    def do_check_loadavg_5(self):
+        self._get_loadavg()
+        return self._cur_load_data[1]
+    def do_check_loadavg_15(self):
+        self._get_loadavg()
+        return self._cur_load_data[2]
+
     def do_check_idle(self):
         self._get_raw_data()
         idle = self._cur_raw_data["cpu"][3]
