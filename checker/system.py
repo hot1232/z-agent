@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
 #
-__author__='haibo.zhang'
+__author__='liang.zhang'
 
 from . import CheckerBase
 import time

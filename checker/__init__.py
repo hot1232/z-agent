@@ -61,7 +61,11 @@ class CheckerBase(gevent.Greenlet):
                 self.timeout.cancel()
                 self.timeout.start()
                 for ck in self:
-                    result.update({ck:getattr(self,"do_check_%s"%ck)()})
+                    tgt=getattr(self,"do_check_%s"%ck)
+                    if callable(tgt):
+                        result.update({ck:tgt()})
+                    else:
+                        result.update({ck:tgt})
                 self.timeout.cancel()
                 if not "checker_result_queue" in chan:
                     chan.append("checker_result_queue")
