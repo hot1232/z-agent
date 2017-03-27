@@ -12,8 +12,10 @@ from socket import error as socket_error
 import imp
 import os
 import signal
+import time
 
 import checker
+import facter
 import sender.zbx
 from lib.link import Chanels
 
@@ -117,6 +119,24 @@ class ZbxAgent(object):
     
     def accept_system_hostname(self):
         pass
+
+class DiscoveryRunner(gevent.Greenlet):
+    def __init__(self, run=None,run_interval=86400):
+        super(DiscoveryRunner,self).__init__(run=run)
+        self.run_interval=run_interval
+        self._discovery_list={}
+    
+    def append(self,name,task):
+        if not self._discovery_list.has_key(name):
+            self._discovery_list.update({name:task})
+    
+    def _run(self):
+        while True:
+            start_t = time.time()
+            for discoverier in self._discovery_list:
+                discoverier()
+            consuming_time=int(time.time()-start_t)
+            gevent.sleep(self.run_interval-consuming_time)
     
                 
 
@@ -125,6 +145,9 @@ class Agent(object):
         self.checker_list=[]
         self.server=None
         self.sender=None
+        self._checker_list=[]
+        self._facter_list=[]
+        self._discovery_list=[]
         for k,v in kwarg.items():
             setattr(self, k, v)
     
@@ -132,21 +155,21 @@ class Agent(object):
         #start worker thread pool
         #这段代码需要再分析一下
         
-        cc=Collector()
+        self._checker_list=Collector()
         
-        for checker in cc:
-            ck=cc[checker].Checker()
+        for checker in self._checker_list:
+            ck=self._checker_list[checker].Checker()
             #非单例的使用方式
             #ck2=cc[checker].Checker(_name="test")
             ck.spawn()
             self.checker_list.append(ck)        
     
     def run_facter(self):
-        cc=Collector(collecttype="facter")
-        for facter in cc:
-            fact=cc[facter].Facter()
-            #not complete!
-        pass
+        self._facter_list=Collector(collecttype="facter")
+        for facter in self._facter_list:
+            fact=self._facter_list[facter].Facter()
+            for name in fact:
+                print("%s: %s"%(name,fact[name]))
     
     def run_zbxtrapsender(self):
         self.sender=ResultsSender()
@@ -162,6 +185,20 @@ class Agent(object):
         self.server.start_accepting()
         self.server._stop_event.wait()
     
+    def run_discovery(self):
+        self._discoverier_list=Collector(collecttype="discovery")
+        self._discover_runner_list={}
+        for discoverier in self._discoverier_list:
+            #get run_interval and then init
+            # ....
+            run_interval=0
+            discover = self._discoverier_list[discoverier].Discovery(run_interval=run_interval)
+            if self._discoverier_list.has_key(discoverier):
+                self._discoverier_list.update({run_interval:{discoverier:discover}})
+            else:
+                self._discoverier_list[run_interval].update({discoverier:discover})
+            
+    
     def gevent_shutdown(self,checker_list,server,sender):
         gevent.killall(self.checker_list)
         server.stop()
@@ -172,7 +209,7 @@ class Agent(object):
         agent=cls()
         agent.run_checker()
         agent.run_zbxtrapsender()
-        #agent.run_facter()
+        agent.run_facter()
         agent.run_cmdserver()
     
     

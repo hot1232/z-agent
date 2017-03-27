@@ -5,12 +5,14 @@ from gevent import monkey
 monkey.patch_all()
 import protobix
 
+from facter.hostname import Facter
+
 
 class Sender(object):   
     def __init__(self,mType="items"):
         self._name="zbx"
         self.data=protobix.DataContainer(mType, "172.16.5.38", 10051)
-        self.hostname="t2"
+        self.hostname=Facter()["fqdn"]
     def add(self,data):
         self.data.add({self.hostname:data})
     def send(self):
