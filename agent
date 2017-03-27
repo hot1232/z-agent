@@ -19,6 +19,10 @@ import facter
 import sender.zbx
 from lib.link import Chanels
 
+from sender import ResultsSender
+from discovery import DiscoveryRunner
+from executor import Executor
+
 
 class Collector(object):
     def __new__(cls, *args, **kw):  
@@ -45,71 +49,7 @@ class Collector(object):
         else:
             self.__iter__()
     
-class CommandRunner(object):
-    def __init__(self):
-        pass
-    def __call__(self,socket, address):
-        try:
-            socket.settimeout(30)
-            while not socket.closed:
-                #需要添加身份认证
-                data=socket.recv(1024)
-                if len(data)==0:
-                    continue
-                import sender.discovery
-                print("recv data:%s"%data)
-                send=sender.discovery.Sender(socket=socket,data="t2")
-                send.send()
-                socket.close()
-                #socket.sendall("test")
-                #socket.sendall('HTTP/1.1 200 OK\n\npid: %s  data: %s!!\n'%(os.getpid(),data))
-            socket.close()
-        except socket_error,e:
-            (errno,msg)=e
-            print("error %s: %s"%(errno,msg))
-            if not socket.closed:
-                socket.close()
         
-    @staticmethod
-    def serve_forever():
-        __doc__ = '''
-        多进程时使用
-        '''
-        server.start()
-        server.start_accepting()
-        server._stop_event.wait()
-        
-
-class ResultsSender(gevent.Greenlet):
-    def __init__(self,*args,**kwargs):
-        super(ResultsSender,self).__init__(*args,**kwargs)
-        
-    def _run(self,*args,**kwargs):
-        chan = Chanels()
-        if not "checker_result_queue" in chan:
-            chan.append("checker_result_queue")
-        self.cls_sender=self.kwargs.get("sender")
-        self.kwargs.pop("sender")
-        sender=self.cls_sender(*(),**self.kwargs)
-        chan=Chanels()
-        while True:
-            data={}
-            try:
-                count=0
-                while not chan["checker_result_queue"].empty():
-                    if count == 20:
-                        break
-                    sender.add(chan["checker_result_queue"].get())
-                    count+=1
-                timeout=gevent.Timeout(3)
-                timeout.start()
-                if sender.data.items_list:
-                    sender.send()
-                timeout.cancel()
-                gevent.sleep(60)
-            except gevent.Timeout,e:
-                print("timeout: %s"%e)
-                continue 
 class ZbxAgent(object):
     def __init__(self):
         pass
@@ -118,27 +58,7 @@ class ZbxAgent(object):
         pass
     
     def accept_system_hostname(self):
-        pass
-
-class DiscoveryRunner(gevent.Greenlet):
-    def __init__(self, run=None,run_interval=86400):
-        super(DiscoveryRunner,self).__init__(run=run)
-        self.run_interval=run_interval
-        self._discovery_list={}
-    
-    def append(self,name,task):
-        if not self._discovery_list.has_key(name):
-            self._discovery_list.update({name:task})
-    
-    def _run(self):
-        while True:
-            start_t = time.time()
-            for discoverier in self._discovery_list:
-                discoverier()
-            consuming_time=int(time.time()-start_t)
-            gevent.sleep(self.run_interval-consuming_time)
-    
-                
+        pass                
 
 class Agent(object):
     def __init__(self,**kwarg):
@@ -148,6 +68,7 @@ class Agent(object):
         self._checker_list=[]
         self._facter_list=[]
         self._discovery_list=[]
+        self._discoverier_spawn_dict={}
         for k,v in kwarg.items():
             setattr(self, k, v)
     
@@ -175,9 +96,9 @@ class Agent(object):
         self.sender=ResultsSender()
         self.sender.spawn(sender=sender.zbx.Sender,mType="items")
     
-    def run_cmdserver(self):
+    def run_executor(self):
         #需要添加配置读取代码
-        self.server = StreamServer(('',10050), CommandRunner(), backlog=100000)
+        self.server = StreamServer(('',10050), Executor(), backlog=100000)
         self.server.init_socket()
         gevent.signal(signal.SIGQUIT, self.gevent_shutdown,self.checker_list,self.server,self.sender)
         gevent.signal(signal.SIGINT,self.gevent_shutdown,self.checker_list,self.server,self.sender)          
@@ -186,6 +107,15 @@ class Agent(object):
         self.server._stop_event.wait()
     
     def run_discovery(self):
+        def run_background(interval,task_list):
+            while True:
+                start_t=int(time.time())
+                result=[]
+                for task in task_list:
+                    send=sender.discovery.Sender(task.run())
+                    send.send()
+                used_t = int(time.time())-start_t
+                gevent.sleep(interval-used_t)
         self._discoverier_list=Collector(collecttype="discovery")
         self._discover_runner_list={}
         for discoverier in self._discoverier_list:
@@ -197,12 +127,21 @@ class Agent(object):
                 self._discoverier_list.update({run_interval:{discoverier:discover}})
             else:
                 self._discoverier_list[run_interval].update({discoverier:discover})
+        
+        for discoer_interval in self._discoverier_list:
+            worker=gevent.spawn(run_background,*(discoer_interval,self._discoverier_list[discoer_interval]))
+            if not discoer_interval in self._discoverier_spawn_dict:
+                self._discoverier_spawn_dict.update({discoer_interval:[]})
+            if not worker in self._discoverier_spawn_dict[discoer_interval]:
+                self._discoverier_spawn_dict[discoer_interval].append(worker)
             
     
     def gevent_shutdown(self,checker_list,server,sender):
         gevent.killall(self.checker_list)
         server.stop()
         gevent.killall([sender])
+        for interval in self._discoverier_spawn_dict:
+            gevent.killall(self._discoverier_spawn_dict[interval])
     
     @classmethod
     def main(cls):
@@ -210,6 +149,7 @@ class Agent(object):
         agent.run_checker()
         agent.run_zbxtrapsender()
         agent.run_facter()
+        agent.run_discovery()
         agent.run_cmdserver()
     
     
