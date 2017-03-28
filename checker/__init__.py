@@ -13,6 +13,7 @@ if not libpath in os.sys.path:
 from abc import abstractmethod
 
 from lib.link import Chanels
+from lib.log import logging
 
 class CheckerException(Exception):
     def __init__(self,msg):
@@ -44,6 +45,7 @@ class CheckerBase(gevent.Greenlet):
             self.timeout=gevent.Timeout(timeout)
         else:
             self.timeout=gevent.Timeout(3)
+        self.logger=logging.getLogger(__name__)
         self._init(*args,**kwargs)
     @abstractmethod
     def _init(self,*args,**kwargs):

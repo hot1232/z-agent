@@ -5,9 +5,12 @@ import os
 libpath=os.path.dirname(__file__).rstrip(__name__)
 if not libpath in os.sys.path:
     os.sys.path.append(libpath)
+    
+from lib.log import logging
 
 class Executor(object):
     def __init__(self):
+        self.logger=logging.getLogger(__name__)
         pass
     def __call__(self,socket, address):
         try:

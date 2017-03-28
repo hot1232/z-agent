@@ -1,0 +1,32 @@
+version: 1  
+  
+formatters:
+    verbose:
+        format: "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+        datefmt: "%Y-%m-%d %H:%M:%S"
+    simple:  
+        format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  
+  
+handlers:  
+    console:  
+        class: logging.StreamHandler  
+        level: DEBUG  
+        formatter: simple  
+        stream: ext://sys.stdout
+    file:
+        level: DEBUG
+        class: cloghandler.ConcurrentRotatingFileHandler
+        maxBytes: 1024 * 1024 * 10
+        backupCount: 10
+        delay: True
+        filename: z-agent.log  
+        formatter: verbose
+  
+loggers:  
+    '':  
+        level: DEBUG  
+        handlers: [console]  
+        propagate: no
+    root:  
+        level: DEBUG  
+        handlers: [console]  

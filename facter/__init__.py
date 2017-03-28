@@ -6,6 +6,7 @@ libpath=os.path.dirname(__file__).rstrip(__name__)
 if not libpath in os.sys.path:
     os.sys.path.append(libpath)
 import gevent
+from lib.log import logging
 
 class FacterBase(object):
     def __new__(cls, *args, **kw):       
@@ -15,6 +16,7 @@ class FacterBase(object):
             cls._instance=orig.__new__(cls, *args, **kw)
         return cls._instance
     def __init__(self,*args, **kwargs):
+        self.logger=logging.getLogger(__name__)
         self._init(*args,**kwargs)
         
     @abstractmethod

@@ -13,6 +13,7 @@ if not libpath in os.sys.path:
 from abc import abstractmethod
 
 from lib.link import Chanels
+from lib.log import logging
 
 class DiscoveryBase(gevent.Greenlet):
     def __new__(cls, *args, **kw):      
@@ -32,6 +33,7 @@ class DiscoveryBase(gevent.Greenlet):
             self.timeout=gevent.Timeout(timeout)
         else:
             self.timeout=gevent.Timeout(3)
+        self.logger=logging.getLogger(__name__)
         self._init(*args,**kwargs)
     @abstractmethod
     def _init(self,*args,**kwargs):
@@ -43,6 +45,7 @@ class DiscoveryBase(gevent.Greenlet):
 class DiscoveryRunner(gevent.Greenlet):
     def __init__(self, run=None,run_interval=86400):
         super(DiscoveryRunner,self).__init__(run=run)
+        self.logger=logging.getLogger(__name__)
         self.run_interval=run_interval
         self._discovery_list={}
     

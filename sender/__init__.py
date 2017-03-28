@@ -1,9 +1,15 @@
 import traceback
+import gevent
+from gevent import monkey
+monkey.patch_socket()
 
 import os
 libpath=os.path.dirname(__file__).rstrip(__name__)
 if not libpath in os.sys.path:
     os.sys.path.append(libpath)
+
+from lib.link import Chanels
+from lib.log import logging
 
 
 class ResultsSender(gevent.Greenlet):

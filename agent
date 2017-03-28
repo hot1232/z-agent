@@ -23,6 +23,8 @@ from sender import ResultsSender
 from discovery import DiscoveryRunner
 from executor import Executor
 
+from lib import log
+
 
 class Collector(object):
     def __new__(cls, *args, **kw):  
@@ -31,6 +33,7 @@ class Collector(object):
             cls._instance = orig.__new__(cls, *args, **kw)  
         return cls._instance    
     def __init__(self,collecttype="checker"):
+        self.logger = log.logging.getLogger(__name__)
         self.mod_list={}
         curdir=os.path.dirname(os.path.realpath(__file__))
         for cwd,subdirs,files in os.walk(os.path.join(curdir,collecttype)):
@@ -39,6 +42,7 @@ class Collector(object):
                 if mod.endswith(".py") and mod != "__init__.py":
                     mod_name="%s.%s"%(import_prefix,mod.rstrip(".py"))
                     file, pathname, desc = imp.find_module(mod.rstrip(".py"),[os.path.join(curdir,cwd)])
+                    self.logger.debug("load mod: %s"%mod_name)
                     self.mod_list[mod.rstrip(".py")]=imp.load_module(mod_name,file,pathname,desc)        
     
     def __iter__(self):
@@ -150,7 +154,7 @@ class Agent(object):
         agent.run_zbxtrapsender()
         agent.run_facter()
         agent.run_discovery()
-        agent.run_cmdserver()
+        agent.run_executor()
     
     
         
