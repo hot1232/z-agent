@@ -34,6 +34,7 @@ class DiscoveryBase(gevent.Greenlet):
         else:
             self.timeout=gevent.Timeout(3)
         self.logger=logging.getLogger(__name__)
+        self.logger.info("Discoverier: %s 's interval is: %s"%(__name__,self.interval))
         self._init(*args,**kwargs)
     @abstractmethod
     def _init(self,*args,**kwargs):
