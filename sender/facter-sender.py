@@ -4,5 +4,8 @@
 from gevent import monkey
 monkey.patch_all()
 
+from lib.log import logging
+
 class Sender(object):
-    pass
+    def __init__(self):
+        self.logger=logging.getLogger(__name__)

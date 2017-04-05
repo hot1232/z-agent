@@ -15,6 +15,7 @@ from lib.log import logging
 class ResultsSender(gevent.Greenlet):
     def __init__(self,*args,**kwargs):
         super(ResultsSender,self).__init__(*args,**kwargs)
+        self.logger=logging.getLogger(__name__)
         
     def _run(self,*args,**kwargs):
         chan = Chanels()

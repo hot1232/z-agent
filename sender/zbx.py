@@ -3,9 +3,10 @@
 
 from gevent import monkey
 monkey.patch_all()
-import protobix
 
 from facter.hostname import Facter
+from lib.log import logging
+from lib import protobix
 
 
 class Sender(object):   
@@ -13,14 +14,14 @@ class Sender(object):
         self._name="zbx"
         self.data=protobix.DataContainer(mType, "172.16.5.38", 10051)
         self.hostname=Facter()["fqdn"]
+        self.logger=logging.getLogger(__name__)
     def add(self,data):
+        self.logger.debug("add data: %s"%data)
         self.data.add({self.hostname:data})
     def send(self):
         try:
             ret = self.data.send(self.data)
             if not ret:
-                print "Ooops. Something went wrong when sending data to Zabbix"
+                self.logger.warn("zbx response None")
         except Exception,e:
-            import traceback
-            traceback.print_exc()
-            print("send error: %s"%e)
+            self.logger.exception(e)

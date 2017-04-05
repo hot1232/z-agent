@@ -3,6 +3,7 @@ yum -y install python-gevent-core
 https://github.com/jbfavre/python-zabbix
 pip install -i https://testpypi.python.org/pypi protobix
 pip install ConcurrentLogHandler
+pip install psutil
 
 1、需要放在配置里的内容：
     zbx发送超时时间
