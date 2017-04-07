@@ -37,9 +37,10 @@ class ResultsSender(gevent.Greenlet):
                 timeout=gevent.Timeout(3)
                 timeout.start()
                 if sender.data.items_list:
+                    self.logger.debug("send data now")
                     sender.send()
                 timeout.cancel()
                 gevent.sleep(60)
             except gevent.Timeout,e:
-                print("timeout: %s"%e)
+                self.logger.error("timeout: %s"%e)
                 continue

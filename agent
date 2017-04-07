@@ -69,10 +69,10 @@ class Agent(object):
         self.checker_list={}
         self.server=None
         self.sender=None
-        self._checker_list=[]
-        self._facter_list=[]
-        self._discovery_list=[]
-        self._discoverier_spawn_dict={}
+        self.facter_list={}
+        self.discoverier_list={}
+        self.discoverier_spawn_dict={}
+        self.auto_discovery_checker_list=[]
         if __name__ == "__main__":
             name="agent"
         else:
@@ -80,33 +80,39 @@ class Agent(object):
         self.logger=logging.getLogger(name)
         for k,v in kwarg.items():
             setattr(self, k, v)
+        self.chanel=Chanels()       
     
     def run_checker(self):
         #start worker thread pool
         #这段代码需要再分析一下
         
-        self._checker_list=Collector()
+        checker_list=Collector()
         
-        for checker in self._checker_list:
+        for checker in checker_list:
             self.logger.info("start checker: %s"%checker)
-            if not hasattr(self._checker_list[checker],"Checker"):
+            if not hasattr(checker_list[checker],"Checker"):
                 self.logger.error("checker: %s not implement"%checker)
                 continue
-            ck=self._checker_list[checker].Checker()
+            ck=checker_list[checker].Checker()
+            if ck.mode == "auto":
+                self.info("checker: %s support only auto discover"%checker)
+                del ck
+                continue
             #非单例的使用方式
             #ck2=cc[checker].Checker(_name="test")
             ck.spawn()
             self.checker_list.update({checker:ck})        
     
     def run_facter(self):
-        self._facter_list=Collector(collecttype="facter")
-        for facter in self._facter_list:
-            if not hasattr(self._checker_list[facter],"Facter"):
+        facter_list=Collector(collecttype="facter")
+        for facter in facter_list:
+            if not hasattr(facter_list[facter],"Facter"):
                 self.logger.error("facter: %s not implement"%facter)
                 continue            
-            fact=self._facter_list[facter].Facter()
+            fact=facter_list[facter].Facter()
             for name in fact:
                 self.logger.debug("%s: %s"%(name,fact[name]))
+            self.facter_list.update({facter:fact})
     
     def run_zbxtrapsender(self):
         self.sender=ResultsSender()
@@ -128,28 +134,29 @@ class Agent(object):
                 result=[]
                 for task in task_list:
                     result.append({task:task.run()})
+                    task.notify_agent_add_check()
                 send=sender.discovery.Sender(result)
                 send.send()
                 used_t = int(time.time())-start_t
                 gevent.sleep(interval-used_t)
-        self._discoverier_list=Collector(collecttype="discovery")
+        discoverier_list=Collector(collecttype="discovery")
         self._discover_runner_list={}
-        for discoverier in self._discoverier_list:
+        for discoverier in discoverier_list:
             #get run_interval and then init
             # ....
             run_interval=0
-            discover = self._discoverier_list[discoverier].Discovery(run_interval=run_interval)
-            if self._discoverier_list.has_key(discoverier):
-                self._discoverier_list.update({run_interval:{discoverier:discover}})
+            discover = discoverier_list[discoverier].Discovery(run_interval=run_interval)
+            if discoverier_list.has_key(discoverier):
+                discoverier_list.update({run_interval:{discoverier:discover}})
             else:
-                self._discoverier_list[run_interval].update({discoverier:discover})
+                discoverier_list[run_interval].update({discoverier:discover})
         
-        for discoer_interval in self._discoverier_list:
-            worker=gevent.spawn(run_background,*(discoer_interval,self._discoverier_list[discoer_interval]))
-            if not discoer_interval in self._discoverier_spawn_dict:
-                self._discoverier_spawn_dict.update({discoer_interval:[]})
-            if not worker in self._discoverier_spawn_dict[discoer_interval]:
-                self._discoverier_spawn_dict[discoer_interval].append(worker)
+        for discoer_interval in discoverier_list:
+            worker=gevent.spawn(run_background,*(discoer_interval,discoverier_list[discoer_interval]))
+            if not discoer_interval in self.discoverier_spawn_dict:
+                self.discoverier_spawn_dict.update({discoer_interval:[]})
+            if not worker in self.discoverier_spawn_dict[discoer_interval]:
+                self.discoverier_spawn_dict[discoer_interval].append(worker)
             
     
     def gevent_shutdown(self):
@@ -160,9 +167,34 @@ class Agent(object):
         self.logger.debug("kill zbx agent trapper")
         gevent.killall([self.sender])
         self.logger.debug("kill discover")
-        for interval in self._discoverier_spawn_dict:
-            gevent.killall(self._discoverier_spawn_dict[interval])
+        for interval in self.discoverier_spawn_dict:
+            gevent.killall(self.discoverier_spawn_dict[interval])
         sys.exit(0)
+    
+    def run_add_auto_checker(self):
+        tgt=self.chanel["discovery"].get()
+        def _add_auto_checker():
+            if len(discover_intervals) == 0:
+                min_discovery_interval = 86400
+            else:
+                min_discovery_interval=min([int(k) for k in self.discoverier_spawn_dict])            
+            while True:
+                while not self.chanel["discovery"].empty():
+                    data=self.chanel["discovery"].get()
+                    checker_list=Collector()
+                    for rcd in data["data"]:
+                        key_name="%sNAME"%(data["key"]).upper()
+                        self.logger.info("add discovery key:%s name: %s"%(data["key"],rcd[key_name]))
+                        ck=checker_list[data["key"]].checker(_name=rcd[key_name])
+                        ck.spawn()
+                        self.auto_discovery_checker_list.append(ck)
+                        del key_name
+                discover_intervals=[int(k) for k in self.discoverier_spawn_dict]
+                gevent.sleep(min_discovery_interval)
+        gevent.spawn(_add_auto_checker)
+    
+    def add_static_checker(self):
+        pass
     
     @classmethod
     def main(cls):
@@ -172,6 +204,7 @@ class Agent(object):
         agent.run_facter()
         agent.run_discovery()
         agent.run_executor()
+        agent.run_add_auto_checker()
         gevent.signal(signal.SIGQUIT, agent.gevent_shutdown)
         gevent.signal(signal.SIGINT,agent.gevent_shutdown)        
     

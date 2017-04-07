@@ -77,12 +77,12 @@ class CheckerBase(gevent.Greenlet):
             except SystemExit,e:
                 raise e
             except AttributeError,e:
-                print(e)
+                self.logger.error(e)
                 continue
             except gevent.Timeout:
-                print("timeout!!")
+                self.logger.error("checker %s timeout"%__name__)
             except Exception,e:
-                traceback.print_exc()
+                self.logger.exception(e)
                 continue
             t2 = time.time()
 

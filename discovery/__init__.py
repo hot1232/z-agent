@@ -15,7 +15,7 @@ from abc import abstractmethod
 from lib.link import Chanels
 from lib.log import logging
 
-class DiscoveryBase(gevent.Greenlet):
+class DiscoveryBase(object):
     def __new__(cls, *args, **kw):      
         if not hasattr(cls, '_instance'):
             cls._instance={}
@@ -29,6 +29,8 @@ class DiscoveryBase(gevent.Greenlet):
             self.interval=interval
         else:
             self.interval=60
+        self.logger=logging.getLogger(__name__)
+        self.logger.info("Discoverier: %s 's interval is: %s"%(__name__,self.interval))        
         if not timeout is None:
             self.timeout=gevent.Timeout(timeout)
         else:
@@ -38,8 +40,6 @@ class DiscoveryBase(gevent.Greenlet):
             self.chanel.append("discovery")
         if not self.chanel["discovery-sender"]:
             self.chanel.append("discovery-sender")        
-        self.logger=logging.getLogger(__name__)
-        self.logger.info("Discoverier: %s 's interval is: %s"%(__name__,self.interval))
         self.data=None
         self._init(*args,**kwargs)
     @abstractmethod
@@ -50,8 +50,9 @@ class DiscoveryBase(gevent.Greenlet):
     def run(self,**kwargs):
         pass
     
-    def notify_monitor(self):
-        pass
+    def notify_agent_add_check(self):
+        self.logger.debug("notify agent to add checker: %s : %s"%(self.__name__,self.data))
+        self.chanel["discovery"].put({"key":__name__.split(".")[-1],"data":self.data["data"]})
     
     def build_discovery_data(self):
         pass

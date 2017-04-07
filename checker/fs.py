@@ -5,7 +5,7 @@ from . import CheckerBase
 import os
 
 class Checker(CheckerBase):
-    mode="dynamic"
+    mode="auto"
     def do_check_free_size(self):
         c=os.statvfs(self._name)
         return "%0.2f"%(c.blocks/float(c.bfree))

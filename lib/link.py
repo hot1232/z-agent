@@ -16,6 +16,7 @@ class Chanels(object):
         #setattr(self, queuename, Queue())
         if not self._queue_list.has_key(queuename):
             self._queue_list[queuename]=Queue()
+            self.logger.debug("add queue: %s"%queuename)
         return True
     
     def __getitem__(self,key):
