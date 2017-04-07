@@ -21,6 +21,7 @@ class CheckerException(Exception):
         self.message=msg
 
 class CheckerBase(gevent.Greenlet):
+    mode="static"
     def __new__(cls, *args, **kw): 
         if kw.get("_name",None):
             key=kw["_name"]

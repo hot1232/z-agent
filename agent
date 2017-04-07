@@ -23,7 +23,7 @@ from lib.log import logging
 
 from sender import ResultsSender
 from discovery import DiscoveryRunner
-from executor import Executor
+from executor.zbx import Executor as ZbxExecutor
 
 
 class Collector(object):
@@ -74,7 +74,7 @@ class Agent(object):
         self._discovery_list=[]
         self._discoverier_spawn_dict={}
         if __name__ == "__main__":
-            name=agent
+            name="agent"
         else:
             name=__name__
         self.logger=logging.getLogger(name)
@@ -88,6 +88,10 @@ class Agent(object):
         self._checker_list=Collector()
         
         for checker in self._checker_list:
+            self.logger.info("start checker: %s"%checker)
+            if not hasattr(self._checker_list[checker],"Checker"):
+                self.logger.error("checker: %s not implement"%checker)
+                continue
             ck=self._checker_list[checker].Checker()
             #非单例的使用方式
             #ck2=cc[checker].Checker(_name="test")
@@ -97,6 +101,9 @@ class Agent(object):
     def run_facter(self):
         self._facter_list=Collector(collecttype="facter")
         for facter in self._facter_list:
+            if not hasattr(self._checker_list[facter],"Facter"):
+                self.logger.error("facter: %s not implement"%facter)
+                continue            
             fact=self._facter_list[facter].Facter()
             for name in fact:
                 self.logger.debug("%s: %s"%(name,fact[name]))
@@ -107,7 +114,7 @@ class Agent(object):
     
     def run_executor(self):
         #需要添加配置读取代码
-        self.server = StreamServer(('',10050), Executor(), backlog=100000)
+        self.server = StreamServer(('',10050), ZbxExecutor(), backlog=100000)
         self.server.init_socket()
         #gevent.signal(signal.SIGINT,self.gevent_shutdown,self.checker_list,self.server,self.sender)          
         #self.server.start() #block mode,uncoment it
@@ -120,8 +127,9 @@ class Agent(object):
                 start_t=int(time.time())
                 result=[]
                 for task in task_list:
-                    send=sender.discovery.Sender(task.run())
-                    send.send()
+                    result.append({task:task.run()})
+                send=sender.discovery.Sender(result)
+                send.send()
                 used_t = int(time.time())-start_t
                 gevent.sleep(interval-used_t)
         self._discoverier_list=Collector(collecttype="discovery")
