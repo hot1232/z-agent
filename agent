@@ -17,12 +17,12 @@ import sys
 
 import checker
 import facter
+import discovery
 import sender.zbx
 from lib.link import Chanels
 from lib.log import logging
 
 from sender import ResultsSender
-from discovery import DiscoveryRunner
 from executor.zbx import Executor as ZbxExecutor
 
 
@@ -95,7 +95,7 @@ class Agent(object):
                 continue
             ck=checker_list[checker].Checker()
             if ck.mode == "auto":
-                self.info("checker: %s support only auto discover"%checker)
+                self.logger.info("checker: %s support only auto discover"%checker)
                 del ck
                 continue
             #非单例的使用方式
@@ -139,17 +139,19 @@ class Agent(object):
                 send.send()
                 used_t = int(time.time())-start_t
                 gevent.sleep(interval-used_t)
-        discoverier_list=Collector(collecttype="discovery")
-        self._discover_runner_list={}
-        for discoverier in discoverier_list:
+                
+        all_discoverier_list=Collector(collecttype="discovery")
+        discoverier_list = {}
+
+        for discoverier in all_discoverier_list:
             #get run_interval and then init
             # ....
             run_interval=0
-            discover = discoverier_list[discoverier].Discovery(run_interval=run_interval)
-            if discoverier_list.has_key(discoverier):
-                discoverier_list.update({run_interval:{discoverier:discover}})
-            else:
-                discoverier_list[run_interval].update({discoverier:discover})
+            discover = all_discoverier_list[discoverier].Discovery(run_interval=run_interval)
+            if not run_interval in discoverier_list:
+                discoverier_list[run_interval]=[]
+            if discover in discoverier_list[run_interval]:
+                discoverier_list[run_interval].append(discover)
         
         for discoer_interval in discoverier_list:
             worker=gevent.spawn(run_background,*(discoer_interval,discoverier_list[discoer_interval]))

@@ -2,6 +2,7 @@
 #-*- coding:utf8 -*-
 
 from gevent.queue import Queue
+from . import logging
 
 class Chanels(object):
     def __new__(cls, *args, **kw):  
@@ -11,6 +12,7 @@ class Chanels(object):
             cls._instance._queue_list={}
         return cls._instance
     def __init__(self):
+        self.logger=logging.getLogger(__name__)
         pass
     def append(self,queuename):
         #setattr(self, queuename, Queue())

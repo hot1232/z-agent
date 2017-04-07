@@ -20,7 +20,7 @@ class DiscoveryBase(object):
         if not hasattr(cls, '_instance'):
             cls._instance={}
             orig = super(DiscoveryBase, cls)
-            cls._instance[key]=orig.__new__(cls, *args, **kw)
+            cls._instance=orig.__new__(cls, *args, **kw)
         return cls._instance
             
     def __init__(self,interval=None,run=None,timeout=None,*args, **kwargs):
