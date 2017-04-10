@@ -27,12 +27,10 @@ class DiscoveryBase(object):
     def __init__(self,run=None,timeout=None,*args, **kwargs):
         super(DiscoveryBase,self).__init__(run=run,*args,**kwargs)
         basepath=os.path.dirname(__file__).rstrip(__name__)
-        configfile=".".join([os.path.join(basepath,"conf",kwargs.get("conf",__name__)),"yaml"])
-        _tmp=yaml.load(open(configfile,"r"))
-        if self.__module__ in _tmp:
-            self.config=_tmp.get(self.__module__)
-        else:
-            self.config=_tmp.get("default")
+        configfile=".".join([os.path.join(basepath,"conf",kwargs.get("conf",self.__module__)),"yaml"])
+        if not os.path.exists(configfile):
+            configfile=os.path.join(basepath,"conf","discovery.default.yaml")
+        self.config=yaml.load(open(configfile,"r"))
         self.interval=self.config.get("interval",60)
         self.logger=logging.getLogger(self.__module__)
         self.logger.info("Discoverier: %s 's interval is: %s"%(__name__,self.interval))        

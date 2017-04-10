@@ -131,14 +131,15 @@ class Agent(object):
     def run_discovery(self):
         def run_background(interval,task_list):
             while True:
+                send=sender.discovery.Sender()
                 start_t=int(time.time())
-                result=[]
                 for task in task_list:
-                    result.append({task.__module__:task.run()})
+                    result=task.run()
                     task.notify_agent_add_check()
+                    send.add(task.__module__,result.get("data",[]))
                 self.logger.debug("discovery result: %s"%result)
-                #send=sender.discovery.Sender(result)
-                #send.send()
+                
+                send.send()
                 used_t = int(time.time())-start_t
                 if interval ==0:
                     interval = 60
@@ -187,7 +188,7 @@ class Agent(object):
                 checker_list=Collector()
                 key=data.pop("key")
                 for rcd in data["data"]:
-                    key_name="%sNAME"%(key.upper())
+                    key_name="{#%sNAME}"%(key.upper())
                     self.logger.info("add discovery key:%s name: %s"%(key,rcd[key_name]))
                     ck=checker_list[key].Checker(_name=rcd[key_name])
                     if not ck in self.auto_discovery_checker_list:

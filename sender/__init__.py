@@ -14,6 +14,9 @@ from lib.log import logging
 
 from abc import abstractmethod
 
+import json
+import struct
+
 
 class ResultsSender(gevent.Greenlet):
     def __init__(self,*args,**kwargs):
@@ -77,3 +80,14 @@ class SenderBase(object):
     @abstractmethod
     def add(self,data):
         pass
+
+class RawSender(object):
+    def __init__(self,socket=None,data=None):
+        self.data=json.dumps(data)
+        self.data_len=struct.pack('<Q', len(self.data))
+        self.header="ZBXD\1"
+        self.socket=socket
+        self.logger=logging.getLogger(__name__)
+    
+    def send(self):
+        self.socket.sendall(self.header+self.data_len+self.data)

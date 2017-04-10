@@ -15,7 +15,7 @@ class Sender(SenderBase):
     def _init(self,mType="items"):
         self._name="zbx"
         self.data=protobix.DataContainer(mType, self.config.get("zabbix-server").get("host"), 10051)
-        self.hostname=Facter()["fqdn"]
+        self.hostname=Facter()["hostname"]
         self.logger=logging.getLogger(self.__module__)
     def add(self,data):
         self.logger.debug("add data: %s"%data)

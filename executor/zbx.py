@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding:utf8 -*-
 from . import ExecutorBase
+from socket import error as socket_error
+from sender import RawSender
 
 class Executor(ExecutorBase):
     def __call__(self,socket, address):
@@ -12,8 +14,8 @@ class Executor(ExecutorBase):
                 if len(data)==0:
                     continue
                 import sender.discovery
-                print("recv data:%s"%data)
-                send=sender.discovery.Sender(socket=socket,data="t2")
+                self.logger.debug("recv data:%s"%data)
+                send=RawSender(socket=socket,data="t2.dns.koudai.com")
                 send.send()
                 socket.close()
                 #socket.sendall("test")

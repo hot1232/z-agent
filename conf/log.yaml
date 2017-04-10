@@ -27,6 +27,10 @@ loggers:
         level: ERROR 
         handlers: [console]  
         propagate: no
+    'facter':  
+        level: DEBUG  
+        handlers: [console]  
+        propagate: no
     'agent':  
         level: DEBUG  
         handlers: [console]  
@@ -35,10 +39,18 @@ loggers:
         level: DEBUG  
         handlers: [console]  
         propagate: no
+    'sender.discovery':  
+        level: ERROR  
+        handlers: [console]  
+        propagate: no
     'discovery.fs':
+        level: ERROR
+        handlers: [console]
+        propagate: no
+    'executor.zbx':
         level: DEBUG
         handlers: [console]
         propagate: no
     root:  
-        level: DEBUG  
+        level: ERROR  
         handlers: [console]  

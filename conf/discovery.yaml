@@ -1,7 +1,0 @@
-default:
-    interval:
-        60
-  
-fs:
-    interval:
-        60 

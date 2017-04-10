@@ -12,11 +12,11 @@ class Checker(CheckerBase):
 
     def do_check_free_size(self):
         c=os.statvfs(self._name)
-        return "%0.2f"%(c.f_blocks/float(c.f_bfree))
+        return "%0.2f"%(c.f_blocks/float(c.f_bfree)*100)
     
     def do_check_free_inode(self):
         c=os.statvfs(self._name)
-        return "%0.2f"%(c.f_ffree/float(c.f_files))
+        return '{:.2f}'.format(c.f_ffree/float(c.f_files)*100)
     
     def do_check_total_size(self):
         c=os.statvfs(self._name)
