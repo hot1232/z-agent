@@ -8,7 +8,7 @@ class Checker(CheckerBase):
     mode="auto"
     def _init(self,*args,**kwargs):
         if self._name:
-            self.suffix=":%s"%self._name
+            self.suffix="[%s]"%self._name
 
     def do_check_free_size(self):
         c=os.statvfs(self._name)

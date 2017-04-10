@@ -24,7 +24,9 @@ class ResultsSender(gevent.Greenlet):
         chan = Chanels()
         if not "checker_result_queue" in chan:
             chan.append("checker_result_queue")
-        self.cls_sender=self.kwargs.get("sender")
+        module_name=kwargs.get("klass","zbx")
+        module=__import__("sender.%s"%module_name,{},{},[module_name],0)
+        self.cls_sender=getattr(module,"Sender")
         self.kwargs.pop("sender")
         sender=self.cls_sender(*(),**self.kwargs)
         chan=Chanels()
@@ -52,15 +54,15 @@ class SenderBase(object):
     def __new__(cls, *args, **kwargs):       
         if not hasattr(cls, '_instance'):
             cls._instance={}
-            orig = super(FacterBase, cls)
-            cls._instance=orig.__new__(cls, *args, **kw)
+            orig = super(SenderBase, cls)
+            cls._instance=orig.__new__(cls, *args, **kwargs)
         return cls._instance
     
     def __init__(self,*args,**kwargs):
         if self.__class__ == SenderBase:
             raise NotImplementedError,"class Sender not implemented"
         basepath=os.path.dirname(__file__).rstrip(__name__)
-        configfile=os.path,join(basepath,"conf",kwargs.get("conf",__name__))
+        configfile=".".join([os.path.join(basepath,"conf",kwargs.get("conf",self.__module__)),"yaml"])
         self.config=yaml.load(open(configfile,"r"))
         self._init(**kwargs)
         

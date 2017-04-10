@@ -24,10 +24,14 @@ handlers:
   
 loggers:  
     '':  
-        level: ERROR  
+        level: ERROR 
         handlers: [console]  
         propagate: no
     'agent':  
+        level: DEBUG  
+        handlers: [console]  
+        propagate: no
+    'checker':  
         level: DEBUG  
         handlers: [console]  
         propagate: no

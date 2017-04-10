@@ -117,7 +117,7 @@ class Agent(object):
     
     def run_zbxtrapsender(self):
         self.sender=ResultsSender()
-        self.sender.spawn(sender=sender.zbx.Sender,mType="items")
+        self.sender.spawn(sender="zbx",mType="items")
     
     def run_executor(self):
         #需要添加配置读取代码
@@ -148,14 +148,11 @@ class Agent(object):
         discoverier_list = {}
 
         for discoverier in all_discoverier_list:
-            #get run_interval and then init
-            # ....
-            run_interval=0
-            discover = all_discoverier_list[discoverier].Discovery(run_interval=60)
-            if not run_interval in discoverier_list:
-                discoverier_list[run_interval]=[]
-            if not discover in discoverier_list[run_interval]:
-                discoverier_list[run_interval].append(discover)
+            discover = all_discoverier_list[discoverier].Discovery()
+            if not discover.interval in discoverier_list:
+                discoverier_list[discover.interval]=[]
+            if not discover in discoverier_list[discover.interval]:
+                discoverier_list[discover.interval].append(discover)
         
         for discoer_interval in discoverier_list:
             self.logger.debug("run discovery at interval: %s"%discoer_interval)

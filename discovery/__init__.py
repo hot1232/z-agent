@@ -14,6 +14,7 @@ from abc import abstractmethod
 
 from lib.link import Chanels
 from lib.log import logging
+import yaml
 
 class DiscoveryBase(object):
     def __new__(cls, *args, **kw):      
@@ -23,12 +24,16 @@ class DiscoveryBase(object):
             cls._instance=orig.__new__(cls, *args, **kw)
         return cls._instance
             
-    def __init__(self,interval=None,run=None,timeout=None,*args, **kwargs):
+    def __init__(self,run=None,timeout=None,*args, **kwargs):
         super(DiscoveryBase,self).__init__(run=run,*args,**kwargs)
-        if interval > 0:
-            self.interval=interval
+        basepath=os.path.dirname(__file__).rstrip(__name__)
+        configfile=".".join([os.path.join(basepath,"conf",kwargs.get("conf",__name__)),"yaml"])
+        _tmp=yaml.load(open(configfile,"r"))
+        if self.__module__ in _tmp:
+            self.config=_tmp.get(self.__module__)
         else:
-            self.interval=60
+            self.config=_tmp.get("default")
+        self.interval=self.config.get("interval",60)
         self.logger=logging.getLogger(self.__module__)
         self.logger.info("Discoverier: %s 's interval is: %s"%(__name__,self.interval))        
         if not timeout is None:
