@@ -24,8 +24,16 @@ handlers:
   
 loggers:  
     '':  
+        level: ERROR  
+        handlers: [console]  
+        propagate: no
+    'agent':  
         level: DEBUG  
         handlers: [console]  
+        propagate: no
+    'discovery.fs':
+        level: DEBUG
+        handlers: [console]
         propagate: no
     root:  
         level: DEBUG  

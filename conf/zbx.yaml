@@ -1,0 +1,7 @@
+version: 1  
+  
+zabbix-server:
+    host:
+        172.16.5.38
+    port:
+        10051 

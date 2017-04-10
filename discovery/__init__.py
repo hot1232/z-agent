@@ -25,11 +25,11 @@ class DiscoveryBase(object):
             
     def __init__(self,interval=None,run=None,timeout=None,*args, **kwargs):
         super(DiscoveryBase,self).__init__(run=run,*args,**kwargs)
-        if interval:
+        if interval > 0:
             self.interval=interval
         else:
             self.interval=60
-        self.logger=logging.getLogger(__name__)
+        self.logger=logging.getLogger(self.__module__)
         self.logger.info("Discoverier: %s 's interval is: %s"%(__name__,self.interval))        
         if not timeout is None:
             self.timeout=gevent.Timeout(timeout)
@@ -51,8 +51,8 @@ class DiscoveryBase(object):
         pass
     
     def notify_agent_add_check(self):
-        self.logger.debug("notify agent to add checker: %s : %s"%(self.__name__,self.data))
-        self.chanel["discovery"].put({"key":__name__.split(".")[-1],"data":self.data["data"]})
+        self.logger.debug("notify agent to add checker: %s : %s"%(__name__,self.data))
+        self.chanel["discovery"].put({"key":self.__module__.split(".")[-1],"data":self.data["data"]})
     
     def build_discovery_data(self):
         pass

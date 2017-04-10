@@ -3,11 +3,12 @@
 
 import struct
 from lib.log import logging
+import json
 
 class Sender(object):
     def __init__(self,socket=None,data=None):
-        self.data=data
-        self.data_len=struct.pack('<Q', len(data))
+        self.data=json.dumps(data)
+        self.data_len=struct.pack('<Q', len(self.data))
         self.header="ZBXD\1"
         self.socket=socket
         self.logger=logging.getLogger(__name__)

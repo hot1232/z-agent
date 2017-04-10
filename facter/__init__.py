@@ -16,7 +16,7 @@ class FacterBase(object):
             cls._instance=orig.__new__(cls, *args, **kw)
         return cls._instance
     def __init__(self,*args, **kwargs):
-        self.logger=logging.getLogger(__name__)
+        self.logger=logging.getLogger(self.__module__)
         self._init(*args,**kwargs)
         
     @abstractmethod

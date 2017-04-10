@@ -8,13 +8,21 @@ from facter.hostname import Facter
 from lib.log import logging
 from lib import protobix
 
+from . import SenderBase
 
-class Sender(object):   
-    def __init__(self,mType="items"):
+
+class Sender(SenderBase):
+    def __new__(cls, *args, **kw):       
+        if not hasattr(cls, '_instance'):
+            cls._instance={}
+            orig = super(FacterBase, cls)
+            cls._instance=orig.__new__(cls, *args, **kw)
+        return cls._instance    
+    def _init(self,mType="items"):
         self._name="zbx"
-        self.data=protobix.DataContainer(mType, "172.16.5.38", 10051)
+        self.data=protobix.DataContainer(mType, self.config.get("zabbix-server").get("host"), 10051)
         self.hostname=Facter()["fqdn"]
-        self.logger=logging.getLogger(__name__)
+        self.logger=logging.getLogger(self.__module__)
     def add(self,data):
         self.logger.debug("add data: %s"%data)
         self.data.add({self.hostname:data})

@@ -36,28 +36,55 @@ class CheckerBase(gevent.Greenlet):
             cls._instance[key]=orig.__new__(cls, *args, **kw)
         return cls._instance[key]
             
-    def __init__(self,interval=None,run=None,timeout=None,_name=None,*args, **kwargs):
+    def __init__(self,*args, **kwargs):
+        self.logger=logging.getLogger(self.__module__)
+        self.suffix=""
+        if self.__class__ == CheckerBase:
+            raise NotImplementedError,"can not create object of CheckerBase"
+        run=kwargs.pop("run",None)
         super(CheckerBase,self).__init__(run=run,*args,**kwargs)
-        if interval:
-            self.interval=interval
+        self._name=kwargs.get("_name")
+        if kwargs.get("interval",None):
+            self.interval=kwargs.pop("interval")
+            self.logger.debug("get new checker interval: %s"%self.interval)
         else:
             self.interval=60
-        if not timeout is None:
-            self.timeout=gevent.Timeout(timeout)
+        if kwargs.get("timeout",None):
+            self.timeout=gevent.Timeout(kwargs.pop("timeout"))
         else:
             self.timeout=gevent.Timeout(3)
-        self.logger=logging.getLogger(__name__)
         self._init(*args,**kwargs)
+    
+    def __eq__(self, other):
+        try:
+            return self._name == other._name
+        except AttributeError:
+            return False
+        
+    def __ne__(self, other):
+        try:
+            return self._name != other._name
+        except AttributeError:
+        #发现两者不可比，返回类型错误
+            raise TypeError('this two argument is not comparable!')
     @abstractmethod
     def _init(self,*args,**kwargs):
         pass
     
     def __iter__(self):
-        return iter([x.replace("do_check_","") for x in dir(self) if x.startswith("do_check_")])
+        if self.mode == "static":
+            ret=iter([x.replace("do_check_","") for x in dir(self) if x.startswith("do_check_")])
+        else:
+            ret=iter([x.replace("do_check_","") for x in dir(self) if x.startswith("do_check_")])
+        return ret
+            
     
-    def _run(self):
+    def _run(self,**kwargs):
         chan=Chanels()
+        if not "checker_result_queue" in chan:
+            chan.append("checker_result_queue")        
         result={}
+        self._name = kwargs.get("_name",None)
         while True:
             t1 = time.time()
             try:
@@ -66,13 +93,11 @@ class CheckerBase(gevent.Greenlet):
                 for ck in self:
                     tgt=getattr(self,"do_check_%s"%ck)
                     if callable(tgt):
-                        result.update({ck:tgt()})
+                        result.update({"%s%s"%(ck,self.suffix):tgt()})
                     else:
-                        result.update({ck:tgt})
+                        result.update({"%s%s"%(ck,self.suffix):tgt})
                 self.timeout.cancel()
-                if not "checker_result_queue" in chan:
-                    chan.append("checker_result_queue")
-                print("write data: %s"%result)
+                self.logger.debug("write data: %s"%result)
                 chan["checker_result_queue"].put(result)
             except SystemExit,e:
                 raise e

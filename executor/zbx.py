@@ -23,4 +23,4 @@ class Executor(ExecutorBase):
             (errno,msg)=e
             print("error %s: %s"%(errno,msg))
             if not socket.closed:
-                socket.close()    
+                socket.close()
