@@ -23,6 +23,6 @@ class Executor(ExecutorBase):
             socket.close()
         except socket_error,e:
             (errno,msg)=e
-            print("error %s: %s"%(errno,msg))
+            self.logger.exception("error %s: %s"%(errno,msg))
             if not socket.closed:
                 socket.close()

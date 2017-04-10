@@ -33,6 +33,8 @@ class ResultsSender(gevent.Greenlet):
         self.kwargs.pop("sender")
         sender=self.cls_sender(*(),**self.kwargs)
         chan=Chanels()
+        if not "checker_result_queue" in chan:
+            chan.append("checker_result_queue")
         while True:
             data={}
             try:

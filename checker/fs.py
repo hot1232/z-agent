@@ -12,7 +12,7 @@ class Checker(CheckerBase):
 
     def do_check_free_size(self):
         c=os.statvfs(self._name)
-        return "%0.2f"%(c.f_blocks/float(c.f_bfree)*100)
+        return "%0.2f"%(c.f_bfree/float(c.f_blocks)*100)
     
     def do_check_free_inode(self):
         c=os.statvfs(self._name)

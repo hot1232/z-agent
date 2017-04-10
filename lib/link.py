@@ -9,16 +9,16 @@ class Chanels(object):
         if not hasattr(cls, '_instance'):  
             orig = super(Chanels, cls)  
             cls._instance = orig.__new__(cls, *args, **kw)
-            cls._instance._queue_list={}
         return cls._instance
     def __init__(self):
         self.logger=logging.getLogger(__name__)
-        pass
+        self._queue_list={}
+
     def append(self,queuename):
         #setattr(self, queuename, Queue())
         if not self._queue_list.has_key(queuename):
             self._queue_list[queuename]=Queue()
-            self.logger.debug("add queue: %s"%queuename)
+            self.logger.debug("add queue: %s",queuename)
         return True
     
     def __getitem__(self,key):

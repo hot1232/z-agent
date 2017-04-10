@@ -42,7 +42,6 @@ class Checker(CheckerBase):
             self._checkloadtime=int(time.time())
 
     def _get_cpucount(self):
-        kvps={}
         self.fh.seek(0)
         keylines=self.fh.readlines()
         for line in keylines:
@@ -132,10 +131,6 @@ class Checker(CheckerBase):
         return "%.2f"%(usage/float(cputime)*100)
 
 if __name__ == "__main__":
-    parser = OptionParser()
-    parser.add_option("-a","--argument",dest="arg")
-    options,agrs = parser.parse_args()
-    cpu=CPU("/proc/stat")
-    print cpu.do_check_iowait()
+    pass
         
     

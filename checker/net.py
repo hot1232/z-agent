@@ -2,7 +2,7 @@
 # -*- coding:utf8 -*-
 
 from . import CheckerBase
-import os
+#import os
 import time
 import unittest
 import copy
@@ -15,8 +15,8 @@ class Checker(CheckerBase):
     def _init(self):
         self._netstat_fp=open("/proc/net/netstat")
         self._netsnmp_fp=open("/proc/net/snmp")
-        self_old_data={}
-        self_cur_data={}
+        self._old_data={}
+        self._cur_data={}
         self._checktime=0
         self.interval=10
     
@@ -31,7 +31,6 @@ class Checker(CheckerBase):
         return dict([(key,value)])
     
     def _get_raw_data(self):
-        kvps={}
         if int(time.time()) - self._checktime >= self.interval:
             self._netsnmp_fp.seek(0)
             self._netstat_fp.seek(0)
@@ -69,11 +68,11 @@ class Checker(CheckerBase):
 
 class TestNetstat(unittest.TestCase):
     def test_get_all_key(self):
-        s=Netstat()
+        s=Checker()
         print(s.keys())
     
     def test_get_all(self):
-        s=Netstat()
+        s=Checker()
         for i in s.keys():
             print("%s: %s"%(i,getattr(s,i)))   
             

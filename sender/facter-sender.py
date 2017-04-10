@@ -8,4 +8,5 @@ from lib.log import logging
 
 class Sender(object):
     def __init__(self):
-        self.logger=logging.getLogger(__name__)
+        self.logger = logging.getLogger(__name__)
+        
