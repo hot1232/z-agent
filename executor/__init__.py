@@ -9,6 +9,7 @@ if not libpath in os.sys.path:
 from lib.log import logging
 from abc import abstractmethod
 
+
 class ExecutorBase(object):
     def __init__(self,*args,**kwargs):
         self.logger=logging.getLogger(self.__module__)
@@ -30,3 +31,15 @@ class ExecutorBase(object):
         server.start()
         server.start_accepting()
         server._stop_event.wait()
+
+class ExecutorCoR(object):
+    def __init__(self, successor=None):
+        self.__successor = successor
+        self.logger = logging.getLogger(self.__module__)
+    
+    def handle(self,request_str):
+        if not self.__successor is None:
+            self.__successor.handle(request_str)
+        else:
+            return self.logger.info("no supported: %s",request_str)
+    

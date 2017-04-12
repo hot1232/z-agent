@@ -24,7 +24,7 @@ from lib.link import Chanels
 from lib.log import logging
 
 from sender import ResultsSender
-from executor.zbx import Executor as ZbxExecutor
+from executor.base import Executor
 
 
 class Collector(object):
@@ -121,7 +121,7 @@ class Agent(object):
 
     def run_executor(self):
         #需要添加配置读取代码
-        self.server = StreamServer(('',10050), ZbxExecutor(), backlog=100000)
+        self.server = StreamServer(('',10050), Executor(), backlog=100000)
         self.server.start()
         #self.server.init_socket()
         #self.server.start_accepting()
@@ -181,22 +181,29 @@ class Agent(object):
             min_discovery_interval = 10
         else:
             min_discovery_interval=min(discover_intervals)
+        if not "discovery" in self.chanel:
+            self.chanel.append("discovery")
+        if not "discovery-sender" in self.chanel:
+            self.chanel.append("discovery-sender")        
         while True:
-            while not self.chanel["discovery"].empty():
-                data=self.chanel["discovery"].get()
-                checker_list=Collector()
-                key=data.pop("key")
-                for rcd in data["data"]:
-                    key_name="{#%sNAME}"%(key.upper())
-                    self.logger.info("add discovery key:%s name: %s",key,rcd[key_name])
-                    ck=checker_list[key].Checker(_name=rcd[key_name])
-                    if not ck in self.auto_discovery_checker_list:
-                        self.logger.debug("checker : %s not in auto_discovery_checker_list,start it",ck)
-                        ck.spawn(_name=rcd[key_name])
-                        self.auto_discovery_checker_list.append(ck)
-                    else:
-                        self.logger.debug("checker : %s already in auto_discovery_checker_list,pass",ck)
-                    del key_name
+            try:
+                while not self.chanel["discovery"].empty():
+                    data=self.chanel["discovery"].get()
+                    checker_list=Collector()
+                    key=data.pop("key")
+                    for rcd in data["data"]:
+                        key_name="{#%sNAME}"%(key.upper())
+                        self.logger.info("add discovery key:%s name: %s",key,rcd[key_name])
+                        ck=checker_list[key].Checker(_name=rcd[key_name])
+                        if not ck in self.auto_discovery_checker_list:
+                            self.logger.debug("checker : %s not in auto_discovery_checker_list,start it",ck)
+                            ck.spawn(_name=rcd[key_name])
+                            self.auto_discovery_checker_list.append(ck)
+                        else:
+                            self.logger.debug("checker : %s already in auto_discovery_checker_list,pass",ck)
+                        del key_name
+            except Exception,e:
+                self.logger.exception(e)
             gevent.sleep(min_discovery_interval)
 
     def run_add_auto_checker(self):

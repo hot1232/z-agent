@@ -54,6 +54,8 @@ class ResultsSender(gevent.Greenlet):
             except gevent.Timeout,e:
                 self.logger.error("timeout: %s"%e)
                 continue
+            except  Exception,e:
+                self.logger.exception(e)
 
 class SenderBase(object):
     def __new__(cls, *args, **kwargs):       

@@ -39,8 +39,10 @@ class DiscoveryBase(object):
             self.timeout = gevent.Timeout(3)
         self.chanel = Chanels()
         if not self.chanel["discovery"]:
+            self.logger.debug("add queue: discovery")
             self.chanel.append("discovery")
         if not self.chanel["discovery-sender"]:
+            self.logger.debug("add queue: discovery-sender")
             self.chanel.append("discovery-sender")
         self.data = None
         self._init(*args, **kwargs)
@@ -53,6 +55,8 @@ class DiscoveryBase(object):
         pass
 
     def notify_agent_add_check(self):
+        if not "discovery" in self.chanel:
+            self.chanel.append("discovery")
         self.logger.debug("notify agent to add checker: %s : %s", __name__, self.data)
         self.chanel["discovery"].put({"key":self.__module__.split(".")[-1], "data":self.data["data"]})
 

@@ -32,7 +32,7 @@ loggers:
         handlers: [console]  
         propagate: no
     'agent':  
-        level: ERROR  
+        level: ERROR 
         handlers: [console]  
         propagate: no
     'checker':  
@@ -43,11 +43,15 @@ loggers:
         level: ERROR  
         handlers: [console]  
         propagate: no
-    'discovery.fs':
+    'lib':
         level: ERROR
         handlers: [console]
         propagate: no
-    'executor.zbx':
+    'discovery':
+        level: DEBUG
+        handlers: [console]
+        propagate: no
+    'executor':
         level: ERROR
         handlers: [console]
         propagate: no
