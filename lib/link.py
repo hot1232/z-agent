@@ -21,7 +21,7 @@ class Chanels(object):
         #setattr(self, queuename, Queue())
         self.logger.debug("append queue: %s",queuename)
         if not self._queue_list.has_key(queuename):
-            self._queue_list[queuename]=Queue()
+            self._queue_list[queuename]=Queue(4096)
             self.logger.debug("add queue: %s",queuename)
         return True
     

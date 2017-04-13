@@ -6,6 +6,7 @@ import logging
 import logging.config
 
 
+
 #formatter = logging.Formatter('%(asctime)s - %(name)s - %(process)d - %(levelname)s - %(message)s')  
 
 #logger = logging.getLogger("compress_log");
@@ -25,5 +26,4 @@ import yaml
 
 basepath=os.path.dirname(__file__).rstrip(__name__)
 yaml_cfg=os.path.join(basepath,"conf","log.yaml")
-yaml.load(open(yaml_cfg,"r"))
 logging.config.dictConfig(yaml.load(open(yaml_cfg,"r")))

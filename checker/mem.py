@@ -14,7 +14,7 @@ from . import CheckerBase
 class Checker(CheckerBase):
     def _init(self,filepath="/proc/meminfo"):
         self.mem_path=filepath
-        self.interval=10
+        self.interval=60
     def _get_all_data(self):
         lins_mem=open(self.mem_path,"r").readlines()
         keys=[]

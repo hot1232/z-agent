@@ -18,7 +18,7 @@ class Checker(CheckerBase):
         self._old_data={}
         self._cur_data={}
         self._checktime=0
-        self.interval=10
+        self.interval=60
     
     def __getattr__(self,key):
         if key.startswith("do_check_"):

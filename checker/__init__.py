@@ -3,7 +3,7 @@
 
 import gevent
 import time
-import traceback
+import gc
 
 import os
 libpath=os.path.dirname(__file__).rstrip(__name__)
@@ -86,37 +86,38 @@ class CheckerBase(gevent.Greenlet):
         result={}
         self._name = kwargs.get("_name",None)
         while True:
-            t1 = time.time()
+            t1 = int(time.time())
             try:
                 self.timeout.cancel()
                 self.timeout.start()
                 for ck in self:
                     tgt=getattr(self,"do_check_%s"%ck)
                     if callable(tgt):
-                        result.update({"%s%s"%(ck,self.suffix):tgt()})
+                        chan["checker_result_queue"].put({"key":"%s%s"%(ck,self.suffix),"value":tgt(),"clock":t1})
                     else:
-                        result.update({"%s%s"%(ck,self.suffix):tgt})
+                        chan["checker_result_queue"].put({"key":"%s%s"%(ck,self.suffix),"value":tgt,"clock":t1})
                 self.timeout.cancel()
-                self.logger.debug("write data: %s"%result)
-                chan["checker_result_queue"].put(result)
             except SystemExit,e:
+                self.logger.info("recv exit signal,exiting.")
                 raise e
             except AttributeError,e:
                 self.logger.error(e)
                 continue
             except gevent.Timeout:
-                self.logger.error("checker %s timeout"%__name__)
+                self.logger.error("checker %s timeout"%self.__module__)
             except Exception,e:
                 self.logger.exception(e)
                 continue
-            t2 = time.time()
+            
+            gc.collect(0)
 
-            t = t2 - t1
+            t = time.time() - t1
             if t <= self.interval:
                 # 睡眠要扣除任务执行时间
                 gevent.sleep(self.interval - t)
             else:
                 # 任务执行超过定时间隔，交出控制权
+                self.logger.info("task time out")
                 gevent.sleep() 
 
 class ZabbixSender(object):

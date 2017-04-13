@@ -12,9 +12,9 @@ class Facter(FacterBase):
         return len(self.partitions)
 
     def facter_partition_total_size(self):
-        data = []
+        data = {}
         for part in self.partitions:
             temp = os.statvfs(part)
-            data.append({part:temp.f_bsize*temp.f_blocks/3072})
+            data.update({part:temp.f_bsize*temp.f_blocks/3072})
         return data
     

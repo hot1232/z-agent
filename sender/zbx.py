@@ -13,17 +13,19 @@ from . import SenderBase
 
 class Sender(SenderBase): 
     def _init(self,mType="items"):
-        self._name="zbx"
         self.data=protobix.DataContainer(mType, self.config.get("zabbix-server").get("host"), 10051)
-        self.hostname=Facter()["hostname"]
-        self.logger=logging.getLogger(self.__module__)
-    def add(self,data):
-        self.logger.debug("add data: %s"%data)
-        self.data.add({self.hostname:data})
+        self.hostname=Facter()["hostname"]       
+    def add(self,key=None,value=None,clock=None):
+        self.logger.debug("add data: %s : %s",key,value,clock)
+        self.data.add_item(self.hostname,key,value,clock)
     def send(self):
         try:
+            with open("/tmp/1.log","a+") as f:
+                f.write("send data ...\n")
             ret = self.data.send(self.data)
             if not ret:
                 self.logger.warn("zbx response None")
+            else:
+                self.logger.info("send data success")
         except Exception,e:
             self.logger.exception("send zbx data to : %s failed"%self.config.get("zabbix-server").get("host"))

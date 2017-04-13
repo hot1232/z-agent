@@ -11,7 +11,7 @@ handlers:
     console:  
         class: logging.StreamHandler  
         level: DEBUG  
-        formatter: simple  
+        formatter: simple
         stream: ext://sys.stdout
     file:
         level: DEBUG
@@ -19,42 +19,37 @@ handlers:
         maxBytes: 1024 * 1024 * 10
         backupCount: 10
         delay: True
-        filename: z-agent.log  
+        filename: /tmp/z-agent.log
         formatter: verbose
-  
-loggers:  
-    '':  
-        level: ERROR 
-        handlers: [console]  
-        propagate: no
-    'facter':  
-        level: ERROR  
-        handlers: [console]  
-        propagate: no
-    'agent':  
-        level: ERROR 
-        handlers: [console]  
-        propagate: no
-    'checker':  
-        level: ERROR  
-        handlers: [console]  
-        propagate: no
-    'sender.discovery':  
-        level: ERROR  
-        handlers: [console]  
-        propagate: no
-    'lib':
-        level: ERROR
-        handlers: [console]
-        propagate: no
-    'discovery':
+    rotate_every_day:
         level: DEBUG
-        handlers: [console]
+        class: logging.handlers.TimedRotatingFileHandler
+        when: D
+        interval: 1
+        backupCount: 5
+        delay: True
+        filename: /tmp/z-agent.log
+        formatter: simple
+    senderlog:
+        level: DEBUG
+        class: logging.handlers.TimedRotatingFileHandler
+        when: D
+        interval: 1
+        backupCount: 5
+        delay: True
+        filename: /tmp/z-agent-sender.log
+        formatter: simple
+  
+loggers:
+    '':  
+        level: INFO
+        handlers: [rotate_every_day]  
         propagate: no
-    'executor':
-        level: ERROR
-        handlers: [console]
+    'sender':  
+        level: DEBUG
+        handlers: [senderlog]  
         propagate: no
-    root:  
-        level: ERROR  
-        handlers: [console]  
+    'sender.zbx':  
+        level: INFO
+        handlers: [senderlog]  
+        propagate: no
