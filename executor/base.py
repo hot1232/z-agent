@@ -6,6 +6,7 @@ from . import ExecutorCoR
 import zbx
 from socket import error as socket_error
 from sender import RawSender
+import agent_executor
 
 class Executor(ExecutorBase):
     def __call__(self,socket, address):
@@ -17,7 +18,7 @@ class Executor(ExecutorBase):
                 if len(data)==0:
                     continue
                 self.logger.debug("recv data:%s"%data)
-                handle=zbx.Executor(successor=ExecutorCoR())
+                handle=agent_executor.Executor(successor=zbx.Executor(successor=ExecutorCoR()))
                 send_data=handle.handle(data.strip())
                 send=RawSender(socket=socket,data=send_data)
                 send.send()
