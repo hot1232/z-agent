@@ -15,7 +15,7 @@ import signal
 import time
 import sys
 import gc
-from meliae import scanner
+#from meliae import scanner
 
 import checker
 import facter
@@ -263,7 +263,7 @@ def daemon():
                     logger.info("gc start")
                     gc.collect()
                     logger.info("gc end")
-                    scanner.dump_all_objects('/tmp/dump%s.txt' % time.time())                    
+                    #scanner.dump_all_objects('/tmp/dump%s.txt' % time.time())                    
                     gevent.sleep(1800)
             except Exception,e:
                 logger.exception(e)

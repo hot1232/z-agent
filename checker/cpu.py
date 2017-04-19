@@ -4,6 +4,7 @@
 __author__='haibo.zhang'
 
 from . import CheckerBase
+from lib.decorator import time_me
 import time
 import os
 import copy
@@ -69,7 +70,7 @@ class Checker(CheckerBase):
     def do_check_loadavg_15(self):
         self._get_loadavg()
         return self._cur_load_data[2]
-
+    #@time_me
     def do_check_idle(self):
         self._get_raw_data()
         idle = self._cur_raw_data["cpu"][3]

@@ -14,6 +14,7 @@ from abc import abstractmethod
 
 from lib.link import Chanels
 from lib.log import logging
+from lib.decorator import time_me
 
 class CheckerException(Exception):
     def __init__(self,msg):
@@ -102,12 +103,10 @@ class CheckerBase(gevent.Greenlet):
                 raise e
             except AttributeError,e:
                 self.logger.error(e)
-                continue
             except gevent.Timeout:
                 self.logger.error("checker %s timeout"%self.__module__)
             except Exception,e:
                 self.logger.exception(e)
-                continue
             
             gc.collect(0)
 

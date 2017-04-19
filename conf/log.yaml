@@ -20,7 +20,7 @@ handlers:
         backupCount: 10
         delay: True
         filename: /tmp/z-agent.log
-        formatter: verbose
+        formatter: simple
     rotate_every_day:
         level: DEBUG
         class: logging.handlers.TimedRotatingFileHandler
@@ -45,8 +45,12 @@ loggers:
         level: INFO
         handlers: [rotate_every_day]  
         propagate: no
-    'sender':  
+    'executor':  
         level: DEBUG
+        handlers: [rotate_every_day]  
+        propagate: no
+    'sender':  
+        level: INFO
         handlers: [senderlog]  
         propagate: no
     'sender.zbx':  

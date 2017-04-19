@@ -9,6 +9,7 @@ from lib.log import logging
 from lib import protobix
 
 from . import SenderBase
+from lib.decorator import time_me
 
 
 class Sender(SenderBase): 
@@ -18,6 +19,8 @@ class Sender(SenderBase):
     def add(self,key=None,value=None,clock=None):
         self.logger.debug("add data: %s : %s",key,value,clock)
         self.data.add_item(self.hostname,key,value,clock)
+    
+    @time_me
     def send(self):
         try:
             with open("/tmp/1.log","a+") as f:
