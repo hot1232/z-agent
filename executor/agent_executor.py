@@ -21,5 +21,14 @@ class Executor(ExecutorCoR):
         elif request_str == "agent.cpu_used":
             self.logger.debug("handle request: agent.cpu_used")
             return "%0.3f"%p.cpu_percent()
+        elif request_str == "agent.ping":
+            self.logger.debug("handle request: agent.ping")
+            return 1
+        elif request_str == "agent.version":
+            self.logger.debug("handle request: agent.version")
+            return "z-agent 0.1"
+        elif request_str == "agent.hostname":
+            self.logger.debug("handle request: %s",request_str)
+            return Facter()["hostname"]         
         else:
-            super(Executor,self).handle(request_str)
+            return super(Executor,self).handle(request_str)

@@ -43,7 +43,7 @@ class Checker(CheckerBase):
     def do_check_open_files_count(self):
         count=0
         for pid in psutil.pids():
-            count+=len(psutil.Process(pid).open_files())
+            count+=len(os.listdir("/proc/%s"%pid))
         return count
     
     def do_check_zombie_process_count(self):

@@ -14,12 +14,13 @@ class Executor(ExecutorBase):
             socket.settimeout(30)
             while not socket.closed:
                 #需要添加身份认证
-                data=socket.recv(1024)
+                data=socket.recv(1024).strip()
                 if len(data)==0:
                     continue
-                self.logger.debug("recv data:%s"%data)
+                self.logger.debug("recv data:%s",data)
                 handle=agent_executor.Executor(successor=zbx.Executor(successor=ExecutorCoR()))
-                send_data=handle.handle(data.strip())
+                send_data=handle.handle(data)
+                self.logger.debug("send data: %s",send_data)
                 send=RawSender(socket=socket,data=send_data)
                 send.send()
                 socket.close()

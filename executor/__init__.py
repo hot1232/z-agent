@@ -39,7 +39,7 @@ class ExecutorCoR(object):
     
     def handle(self,request_str):
         if not self.__successor is None:
-            self.__successor.handle(request_str)
+            return self.__successor.handle(request_str)
         else:
             return self.logger.info("no supported: %s",request_str)
     
