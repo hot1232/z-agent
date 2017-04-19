@@ -11,6 +11,8 @@ import psutil
 class Checker(CheckerBase):
     def _init(self):
         self.interval=360
+    def do_check_uname(self):
+        return ",".join(os.uname())
     def do_check_hostname(self):
         return os.uname()[1]
     def do_check_uptime(self):
