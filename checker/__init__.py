@@ -113,7 +113,9 @@ class CheckerBase(gevent.Greenlet):
             t = time.time() - t1
             if t <= self.interval:
                 # 睡眠要扣除任务执行时间
-                gevent.sleep(self.interval - t)
+                sleep_time = self.interval - t
+                self.logger.debug("%s sleep %d sec",self.__module__,sleep_time)
+                gevent.sleep(sleep_time)
             else:
                 # 任务执行超过定时间隔，交出控制权
                 self.logger.info("task time out")

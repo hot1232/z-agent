@@ -45,8 +45,12 @@ loggers:
         level: INFO
         handlers: [rotate_every_day]  
         propagate: no
-    'executor':  
+    'checker.fs':  
         level: DEBUG
+        handlers: [rotate_every_day]  
+        propagate: no
+    'executor':  
+        level: INFO
         handlers: [rotate_every_day]  
         propagate: no
     'sender':  

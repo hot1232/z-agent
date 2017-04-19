@@ -41,7 +41,7 @@ class Collector(object):
     def __init__(self,collecttype="checker"):
         self.logger = logging.getLogger("agent")
         self.mod_list={}
-        curdir=os.path.dirname(os.path.realpath(__file__))
+        curdir=os.path.dirname(os.path.realpath(__file__)).rstrip(__name__)
         for cwd,_,files in os.walk(os.path.join(curdir,collecttype)):
             import_prefix=collecttype
             for mod in files:

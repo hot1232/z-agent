@@ -37,9 +37,9 @@ def daemon():
             for f in sys.stdout, sys.stderr: f.flush();
             si = file("/dev/null", 'r');
             so = open("/tmp/z-agent.log",'a');
-            #os.dup2(si.fileno(), sys.stdin.fileno())
-            #os.dup2(so.fileno(), sys.stdout.fileno())
-            #os.dup2(so.fileno(), sys.stderr.fileno())
+            os.dup2(si.fileno(), sys.stdin.fileno())
+            os.dup2(so.fileno(), sys.stdout.fileno())
+            os.dup2(so.fileno(), sys.stderr.fileno())
             try:
                 Agent.main();
                 while True:
@@ -67,6 +67,6 @@ if __name__ == "__main__":
         #logger.info("gc start")
         #gc.collect()
         #logger.info("gc end")
-        #gevent.sleep(1800)    
+        #gevent.sleep(1800)
 
         
