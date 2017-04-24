@@ -26,7 +26,11 @@ class FacterBase(gevent.Greenlet):
         pass
 
     def __getitem__(self, key):
-        return getattr(self, "facter_%s"%key)()
+        tgt = getattr(self, "facter_%s"%key)
+        if callable(tgt):
+            return tgt()
+        else:
+            return tgt
 
     def __iter__(self):
         return iter([x.replace("facter_", "") for x in dir(self) if x.startswith("facter_")])
@@ -35,7 +39,7 @@ class FacterBase(gevent.Greenlet):
         while True:
             try:
                 for name in self:
-                    self.logger.debug("%s: %s",name,self[name])
+                    self.logger.info("%s: %s",name,self[name])
                 gc.collect(0)
             except Exception,e:
                 self.logger.exception(e)
