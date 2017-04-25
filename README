@@ -1,13 +1,1 @@
-pip install click
-yum -y install python-gevent-core
-https://github.com/jbfavre/python-zabbix
-pip install -i https://testpypi.python.org/pypi protobix
-pip install ConcurrentLogHandler
-pip install psutil
-
-1、需要放在配置里的内容：
-    zbx发送超时时间
-    zbx server的ip和端口
-    各个chcker的检查间隔（如果有）
-    日志的配置
-3、自定义的cmd server的通讯协议
+yum -y install python-gevent-core python-psutil
