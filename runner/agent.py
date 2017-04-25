@@ -80,7 +80,7 @@ class Agent(object):
         self.checker_list={}
         self.server=None
         self.sender=None
-        self.facter_list={}
+        self.facter_list=[]
         self.discoverier_list={}
         self.discoverier_spawn_dict={}
         self.auto_discovery_checker_list=[]
@@ -115,14 +115,25 @@ class Agent(object):
             self.checker_list.update({cker:ck})        
     
     def run_facter(self):
-        facter_list=Collector(collecttype="facter")
-        for fakter in facter_list:
-            if not hasattr(facter_list[fakter],"Facter"):
-                self.logger.error("facter: %s not implement",fakter)
-                continue
-            fact=facter_list[fakter].Facter()
-            fact.spawn()
-            self.facter_list.update({fakter:fact})
+        def run_background(interval=1200):
+            while True:
+                start=int(time.time())
+                try:
+                    facter_list=Collector(collecttype="facter")
+                    for fakter in facter_list:
+                        if not hasattr(facter_list[fakter],"Facter"):
+                            self.logger.error("facter: %s not implement",fakter)
+                            continue
+                        fact=facter_list[fakter].Facter()
+                        for name in fact:
+                            self.logger.info("%s: %s",name,fact[name])
+                    gc.collect(0)
+                except Exception,e:
+                    self.logger.exception(e)
+                elapse_time=int(time.time())-start
+                gevent.sleep(interval-elapse_time)
+        self.logger.info("start facter collective")
+        self.facter_list=[gevent.spawn(run_background)]
             
     def run_zbxtrapsender(self):
         self.sender=ResultsSender()
@@ -177,7 +188,7 @@ class Agent(object):
 
     def gevent_shutdown(self):
         self.logger.info("kill facter")
-        [gevent.killall([self.facter_list[k]]) for k in self.facter_list]
+        gevent.killall(self.facter_list)
         self.logger.info("kill checker")
         [gevent.killall([self.checker_list[k]]) for k in self.checker_list]
         self.logger.info("kill zbx agent server")

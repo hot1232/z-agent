@@ -7,10 +7,12 @@ LIBPATH = os.path.dirname(__file__).rstrip(__name__)
 if not LIBPATH in os.sys.path:
     os.sys.path.append(LIBPATH)
     
+import time
+    
 import gevent
 from lib.log import logging
 
-class FacterBase(gevent.Greenlet):
+class FacterBase(object):
     def __new__(cls, *args, **kw):
         if not hasattr(cls, '_instance'):
             orig = super(FacterBase, cls)
@@ -34,14 +36,4 @@ class FacterBase(gevent.Greenlet):
 
     def __iter__(self):
         return iter([x.replace("facter_", "") for x in dir(self) if x.startswith("facter_")])
-    
-    def _run(self,*args,**kwargs):
-        while True:
-            try:
-                for name in self:
-                    self.logger.info("%s: %s",name,self[name])
-                gc.collect(0)
-            except Exception,e:
-                self.logger.exception(e)
-            gevent.sleep(1200)
     

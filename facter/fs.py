@@ -15,6 +15,6 @@ class Facter(FacterBase):
         data = {}
         for part in self.partitions:
             temp = os.statvfs(part)
-            data.update({part:temp.f_bsize*temp.f_blocks/3072})
+            data.update({part:temp.f_bsize*temp.f_blocks/1048576})
         return data
     

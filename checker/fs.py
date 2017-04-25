@@ -56,7 +56,6 @@ class Checker(CheckerBase):
     
     def do_check_time_per_read(self):
         data = self._get_raw_data()
-        self.logger.debug("%s / %s",data[1],data[0])
         if data[0] == 0:
             ret = "0.000"
         else:
