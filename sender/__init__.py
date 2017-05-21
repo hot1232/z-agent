@@ -31,7 +31,7 @@ class ResultsSender(gevent.Greenlet):
         module_name=kwargs.get("klass","zbx")
         module=__import__("sender.%s"%module_name,{},{},[module_name],0)
         self.cls_sender=getattr(module,"Sender")
-        self.kwargs.pop("sender")
+        self.logger.debug("use class: %s"%self.kwargs.pop("sender"))
         chan=Chanels()
         if not "checker_result_queue" in chan:
             chan.append("checker_result_queue")
@@ -52,7 +52,7 @@ class ResultsSender(gevent.Greenlet):
                 if sender.data.items_list:
                     self.logger.debug("left in queue len : %d",chan["checker_result_queue"].qsize())
                     sender.send()
-                del sender
+                #del sender
                 timeout.cancel()
                 gc.collect(0)
             except gevent.Timeout,e:

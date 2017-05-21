@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*-
 
 import gevent
@@ -47,11 +47,13 @@ class CheckerBase(gevent.Greenlet):
         self._name=kwargs.get("_name")
         if kwargs.get("interval",None):
             self.interval=kwargs.pop("interval")
-            self.logger.debug("get new checker interval: %s"%self.interval)
+            self.logger.debug("set new checker interval: %s"%self.interval)
         else:
             self.interval=60
         if kwargs.get("timeout",None):
-            self.timeout=gevent.Timeout(kwargs.pop("timeout"))
+            t = kwargs.pop("timeout")
+            self.logger.info("set timeout to %s s"%t)
+            self.timeout=gevent.Timeout(t)
         else:
             self.timeout=gevent.Timeout(3)
         self._init(*args,**kwargs)
@@ -105,7 +107,9 @@ class CheckerBase(gevent.Greenlet):
                 self.logger.error(e)
             except gevent.Timeout:
                 self.logger.error("checker %s timeout"%self.__module__)
+                self.timeout.cancel()
             except Exception,e:
+                self.logger.error("found error: %s"%e)
                 self.logger.exception(e)
             
             gc.collect(0)
@@ -118,7 +122,7 @@ class CheckerBase(gevent.Greenlet):
                 gevent.sleep(sleep_time)
             else:
                 # 任务执行超过定时间隔，交出控制权
-                self.logger.info("task time out")
+                self.logger.error("task time out")
                 gevent.sleep() 
 
 class ZabbixSender(object):

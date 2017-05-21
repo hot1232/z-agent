@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*-
 
 from gevent import monkey
@@ -17,18 +17,16 @@ class Sender(SenderBase):
         self.data=protobix.DataContainer(mType, self.config.get("zabbix-server").get("host"), 10051)
         self.hostname=Facter()["hostname"]       
     def add(self,key=None,value=None,clock=None):
-        self.logger.debug("add data: %s : %s",key,value,clock)
+        self.logger.debug("add data: %s : %s at %s",key,value,clock)
         self.data.add_item(self.hostname,key,value,clock)
     
-    @time_me
+    #@time_me
     def send(self):
         try:
-            with open("/tmp/1.log","a+") as f:
-                f.write("send data ...\n")
             ret = self.data.send(self.data)
             if not ret:
                 self.logger.warn("zbx response None")
             else:
-                self.logger.info("send data success")
+                self.logger.debug("send data success")
         except Exception,e:
             self.logger.exception("send zbx data to : %s failed"%self.config.get("zabbix-server").get("host"))

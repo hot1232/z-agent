@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*-
 
 from . import FacterBase
@@ -15,7 +15,7 @@ class Facter(FacterBase):
 
     def facter_vender(self):
         name = ""
-        with open("/sys/class/dmi/id/board_vendor", "r") as f:
+        with open("/sys/class/dmi/id/chassis_vendor", "r") as f:
             name = f.read().strip()
         return name
 

@@ -27,6 +27,7 @@ import sender.zbx
 import sender.discovery
 from lib.link import Chanels
 from lib.log import logging
+from lib.addzbxhost import AddHostSender
 
 from sender import ResultsSender
 from executor.base import Executor
@@ -107,7 +108,7 @@ class Agent(object):
             ck=checker_list[cker].Checker()
             if ck.mode == "auto":
                 self.logger.info("checker: %s support only auto discover",cker)
-                del ck
+                #del ck
                 continue
             #非单例的使用方式
             #ck2=cc[checker].Checker(_name="test")
@@ -142,7 +143,7 @@ class Agent(object):
     def run_executor(self):
         globals()["agent"]=self
         self.logger.info("start executor")
-        self.server = StreamServer(('',10050), Executor(), backlog=100000)
+        self.server = StreamServer(('0.0.0.0',10050), Executor(), backlog=100000)
         self.server.start()
         #self.server.init_socket()
         #self.server.start_accepting()
@@ -226,10 +227,27 @@ class Agent(object):
                             self.auto_discovery_checker_list.append(ck)
                         else:
                             self.logger.debug("checker : %s already in auto_discovery_checker_list,pass",ck)
-                        del key_name
+                        #del key_name
             except Exception,e:
                 self.logger.exception(e)
             gevent.sleep(min_discovery_interval)
+    def run_add_host(self):
+        self.logger.info("add host: %s"%facter.hostname.Facter()["hostname"])
+        try:
+            while True:
+                sender = AddHostSender(zbx_host="cloud-ops-monitor-00")
+                ret = sender.send(facter.hostname.Facter()["hostname"])
+                if ret["response"] == "failed":
+                    gevent.sleep(300)
+                    continue
+                else:
+                    self.logger.info("add host: %s SUCCESS, and exit this job"%facter.hostname.Facter()["hostname"])
+                    break
+                    #gevent.sleep(46800)
+
+        except Exception,e:
+            self.logger.exception("error in add zbx host: %s"%e)
+        
 
     def run_add_auto_checker(self):
         gevent.spawn(self._add_auto_checker)
@@ -246,5 +264,6 @@ class Agent(object):
         agent.run_discovery()
         agent.run_executor()
         agent.run_add_auto_checker()
+        agent.run_add_host()
         gevent.signal(signal.SIGQUIT, agent.gevent_shutdown)
         gevent.signal(signal.SIGINT,agent.gevent_shutdown)

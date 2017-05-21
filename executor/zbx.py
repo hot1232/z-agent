@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*-
 from . import ExecutorCoR
 from facter.hostname import Facter

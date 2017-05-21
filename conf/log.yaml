@@ -2,7 +2,7 @@ version: 1
   
 formatters:
     verbose:
-        format: "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s"
+        format: "[%(asctime)s] %(levelname)s [%(name)s:%(filename)s-%(lineno)s] %(message)s"
         datefmt: "%Y-%m-%d %H:%M:%S"
     simple:  
         format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'  
@@ -15,8 +15,7 @@ handlers:
         stream: ext://sys.stdout
     file:
         level: DEBUG
-        class: cloghandler.ConcurrentRotatingFileHandler
-        maxBytes: 1024 * 1024 * 10
+        class: logging.handlers.TimedRotatingFileHandler
         backupCount: 10
         delay: True
         filename: /tmp/z-agent.log
@@ -42,22 +41,6 @@ handlers:
   
 loggers:
     '':  
-        level: INFO
-        handlers: [rotate_every_day]  
-        propagate: no
-    'checker.fs':  
         level: DEBUG
         handlers: [rotate_every_day]  
-        propagate: no
-    'executor':  
-        level: INFO
-        handlers: [rotate_every_day]  
-        propagate: no
-    'sender':  
-        level: INFO
-        handlers: [senderlog]  
-        propagate: no
-    'sender.zbx':  
-        level: INFO
-        handlers: [senderlog]  
         propagate: no

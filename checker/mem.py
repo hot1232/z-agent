@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2.7
 # -*- coding:utf8 -*-
 #__author__='kai.xu'
 
@@ -24,7 +24,7 @@ class Checker(CheckerBase):
     def _do_check_common(self,same_key):
         now_important_data = self._get_all_data()
         ret = now_important_data.get(same_key,0)
-        return ret
+        return int(ret)*1024
     #@time_me
     def do_check_MemTotal(self):
         return self._do_check_common('MemTotal')
@@ -32,6 +32,9 @@ class Checker(CheckerBase):
     #@time_me
     def do_check_MemFree(self):
         return self._do_check_common('MemFree')
+    
+    def do_check_MemFree_percent(self):
+        return "%0.2f"%(self.do_check_MemFree()/float(self.do_check_MemTotal()))
     
     #@time_me
     def do_check_Buffers(self):

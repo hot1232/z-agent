@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*
 
 from . import CheckerBase
@@ -40,11 +40,11 @@ class Checker(CheckerBase):
     
     def do_check_free_inode(self):
         c=os.statvfs(self._name)
-        return '{:.2f}'.format(c.f_ffree/float(c.f_files)*100)
+        return '%0.2f'%float(c.f_ffree/float(c.f_files)*100)
     
     def do_check_total_size(self):
         c=os.statvfs(self._name)
-        return c.f_blocks*c.f_bsize/1024/1024
+        return c.f_blocks*c.f_bsize
     
     def do_check_time_per_write(self):
         data = self._get_raw_data()

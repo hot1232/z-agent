@@ -23,7 +23,13 @@ import logging.config
 
 import os
 import yaml
+import sys
+
 
 basepath=os.path.dirname(__file__).rstrip(__name__)
 yaml_cfg=os.path.join(basepath,"conf","log.yaml")
-logging.config.dictConfig(yaml.load(open(yaml_cfg,"r")))
+if sys.version_info[0] == 2 and sys.version_info[1] < 7:
+    import dictconfig
+    dictconfig.dictConfig(yaml.load(open(yaml_cfg,"r")))
+else:
+    logging.config.dictConfig(yaml.load(open(yaml_cfg,"r")))

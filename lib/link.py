@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 #-*- coding:utf8 -*-
 
 from gevent.queue import Queue
@@ -26,11 +26,11 @@ class Chanels(object):
         return True
     
     def __getitem__(self,key):
-        self.logger.debug("queue list : %s, id is: %s",self._queue_list,id(self))
+        #self.logger.debug("queue list : %s, id is: %s",self._queue_list,id(self))
         return self._queue_list.get(key,None)
     
     def __contains__(self,key):
-        self.logger.debug("queue list : %s, id is: %s",self._queue_list,id(self))
+        #self.logger.debug("queue list : %s, id is: %s",self._queue_list,id(self))
         if key in self._queue_list.keys():
             return True
         else:

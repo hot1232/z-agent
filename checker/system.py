@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*-
 #
 __author__='liang.zhang'
@@ -43,28 +43,40 @@ class Checker(CheckerBase):
     def do_check_open_files_count(self):
         count=0
         for pid in psutil.pids():
-            count+=len(os.listdir("/proc/%s"%pid))
+            try:
+                count+=len(os.listdir("/proc/%s"%pid))
+            except:
+                continue
         return count
     
     def do_check_zombie_process_count(self):
         count=0
         for pid in psutil.pids():
-            if psutil.Process(pid).status == psutil.STATUS_ZOMBIE:
-                count+=1
+            try:
+                if psutil.Process(pid).status == psutil.STATUS_ZOMBIE:
+                    count+=1
+            except psutil.NoSuchProcess:
+                continue
         return count
     
     def do_check_running_process_count(self):
         count=0
         for pid in psutil.pids():
-            if psutil.Process(pid).status == psutil.STATUS_RUNNING:
-                count+=1
+            try:
+                if psutil.Process(pid).status == psutil.STATUS_RUNNING:
+                    count+=1
+            except psutil.NoSuchProcess:
+                continue
         return count
     
     def do_check_waiting_process_count(self):
         count=0
         for pid in psutil.pids():
-            if psutil.Process(pid).status == psutil.STATUS_WAITING:
-                count+=1
+            try:
+                if psutil.Process(pid).status == psutil.STATUS_WAITING:
+                    count+=1
+            except psutil.NoSuchProcess:
+                pass
         return count
     
     def do_check_max_pids(self):
@@ -72,3 +84,23 @@ class Checker(CheckerBase):
         with open("/proc/sys/kernel/pid_max") as f:
             pid_count=int(f.read())
         return pid_count
+    
+    def do_check_socket_used(self):
+        socket_count = 0
+        with open("/proc/net/sockstat","r") as f:
+            socket_count = f.readline().split()[2]
+        return socket_count
+    
+    def do_check_tcp_conn(self):
+        tcp_conn = 0
+        with open("/proc/net/sockstat","r") as f:
+            _ = f.readline()
+            tcp_conn = f.readline().split()[8]
+        return tcp_conn
+    
+    def do_check_tcp_wait_destroy(self):
+        count = 0
+        with open("/proc/net/sockstat","r") as f:
+            _ = f.readline()
+            count = f.readline().split()[4]
+        return count

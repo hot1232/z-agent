@@ -41,13 +41,14 @@ def daemon():
             os.dup2(so.fileno(), sys.stdout.fileno())
             os.dup2(so.fileno(), sys.stderr.fileno())
             try:
+                gc.enable()
                 Agent.main();
                 while True:
                     logger.info("gc start")
                     gc.collect()
                     logger.info("gc end")
                     #scanner.dump_all_objects('/tmp/dump%s.txt' % time.time())                    
-                    gevent.sleep(1800)
+                    gevent.sleep(60)
             except Exception,e:
                 logger.exception(e)
         else:

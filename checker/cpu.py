@@ -1,6 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2.7
 # -*- coding:utf8 -*-
-#abc
 __author__='haibo.zhang'
 
 from . import CheckerBase
