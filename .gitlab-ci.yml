@@ -14,8 +14,8 @@ build_jod:
 update_repo_job:
     stage: update_repo
     script:
-    - rsync -avrP /root/rpmbuild/RPMS/x86_64/* 192.168.1.49:/data/server/yum/other/6/x86_64/
-    - ssh 192.168.1.49 createrepo /data/server/yum/other/6/x86_64/
+    - rsync -avrP /root/rpmbuild/RPMS/x86_64/* 192.168.10.64:/data/server/yum/other/6/x86_64/
+    - ssh 192.168.10.64 createrepo /data/server/yum/other/6/x86_64/
 
 deploy_job:
     stage: deploy

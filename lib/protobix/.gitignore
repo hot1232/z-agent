@@ -1,0 +1,5 @@
+/__init__.pyc
+/datacontainer.pyc
+/senderexception.pyc
+/senderprotocol.pyc
+*.pyc
