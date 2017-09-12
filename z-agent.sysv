@@ -49,7 +49,7 @@ start()
 	[ -x $AGENT ] || exit 5
 
 	echo -n $"Starting $prog: "
-	/usr/bin/taskset -c 2 $AGENT && success || failure
+	$AGENT && success || failure
 	RETVAL=$?
 	[ $RETVAL -eq 0 ] && touch $lockfile
 	echo

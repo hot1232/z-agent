@@ -26,13 +26,14 @@ class DiscoveryBase(object):
     def __init__(self, run=None, timeout=None, *args, **kwargs):
         super(DiscoveryBase, self).__init__(run=run, *args, **kwargs)
         basepath = os.path.dirname(__file__).rstrip(__name__)
-        configfile = ".".join([os.path.join(basepath, "conf", kwargs.get("conf", self.__module__)), "yaml"])
+        self.logger = logging.getLogger(self.__module__)
+        configfile = ".".join([os.path.join(basepath, "conf", kwargs.get("conf", self.__module__.lstrip("_"))), "yaml"])
+        self.logger.debug("concat configfile: %s",configfile)
         if not os.path.exists(configfile):
             configfile = os.path.join(basepath, "conf", "discovery.default.yaml")
         self.config = yaml.load(open(configfile, "r"))
         self.interval = self.config.get("interval", 60)
-        self.logger = logging.getLogger(self.__module__)
-        self.logger.info("Discoverier: %s 's interval is: %s", __name__, self.interval)
+        self.logger.info("Discoverier: %s 's , use config file: %s , interval is: %s", __name__, configfile, self.interval)
         if not timeout is None:
             self.timeout = gevent.Timeout(timeout)
         else:

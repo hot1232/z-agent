@@ -29,6 +29,8 @@ from lib.link import Chanels
 from lib.log import logging
 from lib.addzbxhost import AddHostSender
 
+from discovery._application import Discovery as ApplicationDiscovery
+
 from sender import ResultsSender
 from executor.base import Executor
 
@@ -46,9 +48,9 @@ class Collector(object):
         for cwd,_,files in os.walk(os.path.join(curdir,collecttype)):
             import_prefix=collecttype
             for mod in files:
-                if mod.endswith(".py") and mod != "__init__.py":
-                    mod_name="%s.%s"%(import_prefix,mod.rstrip(".py"))
-                    file, pathname, desc = imp.find_module(mod.rstrip(".py"),[os.path.join(curdir,cwd)])
+                if not mod.startswith("_") and mod.endswith(".py") and mod != "__init__.py":
+                    mod_name="%s.%s"%(import_prefix,mod.replace(".py",""))
+                    file, pathname, desc = imp.find_module(mod.replace(".py",""),[os.path.join(curdir,cwd)])
                     self.logger.debug("load mod: %s",mod_name)
                     self.mod_list[mod.rstrip(".py")]=imp.load_module(mod_name,file,pathname,desc)        
     
@@ -156,9 +158,13 @@ class Agent(object):
                 start_t=int(time.time())
                 for task in task_list:
                     result=task.run()
-                    task.notify_agent_add_check()
-                    send.add(task.__module__,result.get("data",[]))
-                self.logger.debug("discovery result: %s",result)
+                    data = None if not result else result.get("data",[])
+                    if data:
+                        task.notify_agent_add_check()
+                        send.add(task.__module__,data)
+                        self.logger.debug("discovery result: %s",result)
+                    else:
+                        self.logger.debug("discovery nothing: %s",result)
 
                 send.send()
                 used_t = int(time.time())-start_t
@@ -222,11 +228,11 @@ class Agent(object):
                         self.logger.info("add discovery key:%s name: %s",key,rcd[key_name])
                         ck=checker_list[key].Checker(_name=rcd[key_name])
                         if not ck in self.auto_discovery_checker_list:
-                            self.logger.info("checker : %s not in auto_discovery_checker_list,start it",ck)
+                            self.logger.info("checker : %s not in auto_discovery_checker_list,start it",ck.__module__)
                             ck.spawn(_name=rcd[key_name])
                             self.auto_discovery_checker_list.append(ck)
                         else:
-                            self.logger.debug("checker : %s already in auto_discovery_checker_list,pass",ck)
+                            self.logger.debug("checker : %s already in auto_discovery_checker_list,pass",ck.__module__)
                         #del key_name
             except Exception,e:
                 self.logger.exception(e)
@@ -236,7 +242,21 @@ class Agent(object):
         try:
             while True:
                 sender = AddHostSender(zbx_host="cloud-ops-monitor-00")
-                ret = sender.send(facter.hostname.Facter()["hostname"])
+                app_discover = ApplicationDiscovery()
+                data = app_discover.run()
+                ret = sender.send(facter.hostname.Facter()["hostname"], data)
+                self.logger.debug("host register return: %s",ret)
+                for app in data.split(" "):
+                    try:
+                        self.logger.info("found application: %s on this host ,start checker",app)
+                        self.logger.debug("import checker: checker._%s",app)
+                        ck = __import__("checker._%s"%app)
+                        mod = getattr(ck,"_%s"%app)
+                        mod.Checker().spawn()
+                        self.logger.info("checker for : %s over",app)
+                    except Exception as e:
+                        self.logger.exception("start checker for :%s  err: %s", app, e)
+                        
                 if ret["response"] == "failed":
                     gevent.sleep(300)
                     continue
